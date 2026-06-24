@@ -56,19 +56,19 @@ export default function Library() {
   return (
     <div style={styles.container}>
       <h2
-  style={{
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    marginBottom: "20px",
-    fontSize: "28px",
-    fontWeight: 700,
-    color: "#1f2937",
-  }}
->
-  <span style={{ fontSize: "30px" }}>📚</span>
-  <span>Libreria</span>
-</h2>
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          marginBottom: "20px",
+          fontSize: "28px",
+          fontWeight: 700,
+          color: "#1f2937",
+        }}
+      >
+        <span style={{ fontSize: "30px" }}>📚</span>
+        <span>Libreria</span>
+      </h2>
 
       {/* SEARCH */}
       <input
@@ -77,6 +77,11 @@ export default function Library() {
         onChange={(e) => setSearch(e.target.value)}
         style={styles.search}
       />
+
+      {/* COUNTER */}
+      <div style={styles.counter}>
+        📊 {filteredBooks.length} libri
+      </div>
 
       {/* ADD */}
       <button onClick={openAdd} style={styles.add}>
@@ -150,6 +155,11 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '10px',
     border: '1px solid #ddd',
     outline: 'none'
+  },
+  counter: {
+    fontSize: '13px',
+    color: '#666',
+    fontWeight: 500
   },
   add: {
     padding: '10px',

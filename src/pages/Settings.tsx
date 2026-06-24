@@ -66,39 +66,22 @@ export default function Settings() {
     reader.readAsText(file)
   }
 
-  /* =========================
-     RESET DATA (DEV TOOL)
-  ========================= */
-
-  const resetAll = async () => {
-    const confirmReset = confirm(
-      'Sei sicuro? Tutti i dati verranno eliminati.'
-    )
-
-    if (!confirmReset) return
-
-    await db.books.clear()
-    await db.wishlist.clear()
-
-    alert('Dati eliminati')
-  }
-
   return (
     <div style={styles.container}>
       <h2
-  style={{
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    marginBottom: "20px",
-    fontSize: "28px",
-    fontWeight: 700,
-    color: "#1f2937",
-  }}
->
-  <span style={{ fontSize: "30px" }}>⚙️</span>
-  <span>Settings</span>
-</h2>
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          marginBottom: "20px",
+          fontSize: "28px",
+          fontWeight: 700,
+          color: "#1f2937",
+        }}
+      >
+        <span style={{ fontSize: "30px" }}>⚙️</span>
+        <span>Settings</span>
+      </h2>
 
       {/* EXPORT */}
       <div style={styles.card}>
@@ -125,14 +108,6 @@ export default function Settings() {
         </button>
       </div>
 
-      {/* RESET */}
-      <div style={styles.card}>
-        <p style={styles.label}>Zona pericolosa</p>
-        <button onClick={resetAll} style={styles.danger}>
-          Cancella tutti i dati
-        </button>
-      </div>
-
       {/* INFO */}
       <div style={styles.card}>
         <p style={styles.label}>Informazioni</p>
@@ -153,10 +128,6 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: '12px'
-  },
-  title: {
-    fontSize: '20px',
-    fontWeight: 600
   },
   card: {
     padding: '12px',
@@ -184,15 +155,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '8px',
     border: '1px solid #ddd',
     background: '#fff',
-    cursor: 'pointer'
-  },
-  danger: {
-    padding: '8px',
-    borderRadius: '8px',
-    border: 'none',
-    background: '#fee2e2',
-    color: '#991b1b',
-    fontWeight: 600,
     cursor: 'pointer'
   },
   info: {
