@@ -53,6 +53,20 @@ export default function Library() {
     setShowForm(true)
   }
 
+  /* =========================
+     DELETE BOOK
+  ========================= */
+
+  const deleteBook = async (id?: number) => {
+    if (!id) return
+
+    const confirmDelete = confirm('Eliminare questo libro?')
+    if (!confirmDelete) return
+
+    await db.books.delete(id)
+    loadBooks()
+  }
+
   return (
     <div style={styles.container}>
       <h2
@@ -70,7 +84,6 @@ export default function Library() {
         <span>Libreria</span>
       </h2>
 
-      {/* SEARCH */}
       <input
         placeholder="Cerca per titolo, autore o genere..."
         value={search}
@@ -78,17 +91,10 @@ export default function Library() {
         style={styles.search}
       />
 
-      {/* COUNTER */}
-      <div style={styles.counter}>
-        📊 {filteredBooks.length} libri
-      </div>
-
-      {/* ADD */}
       <button onClick={openAdd} style={styles.add}>
         + Aggiungi libro
       </button>
 
-      {/* FORM */}
       {showForm && (
         <BookForm
           book={editingBook}
@@ -100,7 +106,6 @@ export default function Library() {
         />
       )}
 
-      {/* LISTA */}
       <div style={styles.list}>
         {filteredBooks.map((book) => (
           <div key={book.id} style={styles.card}>
@@ -125,12 +130,18 @@ export default function Library() {
               </p>
             </div>
 
-            <button
-              onClick={() => openEdit(book)}
-              style={styles.edit}
-            >
-              ✏️ Modifica
-            </button>
+            <div style={styles.actions}>
+              <button onClick={() => openEdit(book)} style={styles.edit}>
+                ✏️
+              </button>
+
+              <button
+                onClick={() => deleteBook(book.id)}
+                style={styles.delete}
+              >
+                ✕
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -146,20 +157,11 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     gap: '12px'
   },
-  title: {
-    fontSize: '20px',
-    fontWeight: 600
-  },
   search: {
     padding: '10px',
     borderRadius: '10px',
     border: '1px solid #ddd',
     outline: 'none'
-  },
-  counter: {
-    fontSize: '13px',
-    color: '#666',
-    fontWeight: 500
   },
   add: {
     padding: '10px',
@@ -195,11 +197,25 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '13px',
     color: '#666'
   },
+  actions: {
+    display: 'flex',
+    gap: '8px',
+    alignItems: 'start'
+  },
   edit: {
     background: '#f3f3ff',
     border: 'none',
     padding: '8px 10px',
     borderRadius: '8px',
     cursor: 'pointer'
+  },
+  delete: {
+    background: '#fee2e2',
+    border: 'none',
+    padding: '8px 10px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    color: '#991b1b',
+    fontWeight: 700
   }
 }

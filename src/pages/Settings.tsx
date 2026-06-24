@@ -66,6 +66,22 @@ export default function Settings() {
     reader.readAsText(file)
   }
 
+  /* =========================
+     RESET BOOKS
+  ========================= */
+
+  const resetBooks = async () => {
+    const confirmReset = confirm(
+      'Vuoi eliminare tutti i libri? Questa azione non può essere annullata.'
+    )
+
+    if (!confirmReset) return
+
+    await db.books.clear()
+
+    alert('Tutti i libri sono stati eliminati')
+  }
+
   return (
     <div style={styles.container}>
       <h2
@@ -97,7 +113,7 @@ export default function Settings() {
         <input type="file" onChange={importBackup} />
       </div>
 
-      {/* CLOUD (FUTURO) */}
+      {/* CLOUD */}
       <div style={styles.card}>
         <p style={styles.label}>Backup cloud</p>
         <button
@@ -105,6 +121,14 @@ export default function Settings() {
           style={styles.buttonSecondary}
         >
           Backup cloud
+        </button>
+      </div>
+
+      {/* RESET LIBRI */}
+      <div style={styles.card}>
+        <p style={styles.label}>Reset libreria</p>
+        <button onClick={resetBooks} style={styles.danger}>
+          Elimina tutti i libri
         </button>
       </div>
 
@@ -155,6 +179,15 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '8px',
     border: '1px solid #ddd',
     background: '#fff',
+    cursor: 'pointer'
+  },
+  danger: {
+    padding: '8px',
+    borderRadius: '8px',
+    border: 'none',
+    background: '#fee2e2',
+    color: '#991b1b',
+    fontWeight: 600,
     cursor: 'pointer'
   },
   info: {
