@@ -77,7 +77,20 @@ export default function Wishlist() {
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>Wishlist</h2>
+      <h2
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    marginBottom: "20px",
+    fontSize: "28px",
+    fontWeight: 700,
+    color: "#1f2937",
+  }}
+>
+  <span style={{ fontSize: "30px" }}>⭐</span>
+  <span>Wishlist</span>
+</h2>
 
       <p style={styles.counter}>
         Libri in lista: {items.length}

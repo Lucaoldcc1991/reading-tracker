@@ -46,7 +46,20 @@ export default function Home() {
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>Home</h2>
+      <h2
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    marginBottom: "20px",
+    fontSize: "28px",
+    fontWeight: 700,
+    color: "#1f2937",
+  }}
+>
+  <span style={{ fontSize: "30px" }}>🏠</span>
+  <span>Home</span>
+</h2>
 
       <div style={styles.grid}>
         <Card title="Totale libri letti" value={totalReadBooks} />
