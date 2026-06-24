@@ -53,10 +53,6 @@ export default function Library() {
     setShowForm(true)
   }
 
-  /* =========================
-     DELETE BOOK
-  ========================= */
-
   const deleteBook = async (id?: number) => {
     if (!id) return
 
@@ -83,6 +79,11 @@ export default function Library() {
         <span style={{ fontSize: "30px" }}>📚</span>
         <span>Libreria</span>
       </h2>
+
+      {/* COUNTER */}
+      <div style={styles.counter}>
+        📊 {filteredBooks.length} libri
+      </div>
 
       <input
         placeholder="Cerca per titolo, autore o genere..."
@@ -156,6 +157,11 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: '12px'
+  },
+  counter: {
+    fontSize: '13px',
+    color: '#666',
+    fontWeight: 500
   },
   search: {
     padding: '10px',
