@@ -9,6 +9,7 @@ type Book = {
   country?: string
   pages: number
   readingYear?: number
+  isClassic?: boolean
 }
 
 export default function Stats() {
@@ -49,10 +50,21 @@ export default function Stats() {
   )
 
   const classicBooks = filteredBooks.filter(
-    (b: any) => b.classic === true
+    (b) => b.isClassic === true
   )
 
   const totalClassics = classicBooks.length
+
+  /* =========================
+     LIBRO PIÙ LUNGO
+  ========================= */
+
+  const longestBook =
+    filteredBooks.length > 0
+      ? [...filteredBooks].sort(
+          (a, b) => (b.pages || 0) - (a.pages || 0)
+        )[0]
+      : null
 
   /* =========================
      AUTORI
@@ -100,19 +112,11 @@ export default function Stats() {
     (a, b) => b[1] - a[1]
   )
 
-  /* =========================
-     LIBRO PIÙ LUNGO
-  ========================= */
-
-  const longestBook = [...filteredBooks].sort(
-    (a, b) => (b.pages || 0) - (a.pages || 0)
-  )[0]
-
   return (
     <div style={styles.container}>
       <h2 style={styles.title}>📊 Statistiche</h2>
 
-      {/* FILTRO */}
+      {/* FILTRO ANNO */}
       <select
         value={yearFilter}
         onChange={(e) => setYearFilter(e.target.value)}
@@ -198,7 +202,10 @@ export default function Stats() {
   )
 }
 
-/* STILI */
+/* =========================
+   STILI
+========================= */
+
 const styles: Record<string, React.CSSProperties> = {
   container: {
     display: 'flex',

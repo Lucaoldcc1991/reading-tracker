@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { db } from '../db/database'
+import { COUNTRIES } from '../utils/countries'
 
 type Book = {
   id?: number
@@ -12,6 +13,7 @@ type Book = {
   publicationYear?: number
   readingMonth?: number
   readingYear?: number
+  createdAt?: number
   isClassic?: boolean
 }
 
@@ -33,10 +35,6 @@ const GENRES = [
 const MONTHS = [
   'Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
   'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'
-]
-
-const COUNTRIES = [
-  'Italia','Francia','Germania','Spagna','Regno Unito','USA','Giappone'
 ]
 
 export default function BookForm({
@@ -82,10 +80,10 @@ export default function BookForm({
       series,
       country,
       pages,
-      isClassic,
       publicationYear: publicationYear || undefined,
       readingMonth: readingMonth || undefined,
-      readingYear: readingYear || undefined
+      readingYear: readingYear || undefined,
+      isClassic
     }
 
     if (book?.id) {
@@ -107,17 +105,16 @@ export default function BookForm({
           {book ? 'Modifica libro' : 'Aggiungi libro'}
         </h3>
 
-        <input style={styles.input} placeholder="Titolo"
-          value={title} onChange={(e) => setTitle(e.target.value)} />
+        <input style={styles.input} placeholder="Titolo" value={title}
+          onChange={(e) => setTitle(e.target.value)} />
 
-        <input style={styles.input} placeholder="Autore"
-          value={author} onChange={(e) => setAuthor(e.target.value)} />
+        <input style={styles.input} placeholder="Autore" value={author}
+          onChange={(e) => setAuthor(e.target.value)} />
 
-        <select style={styles.input}
-          value={genre}
+        <select style={styles.input} value={genre}
           onChange={(e) => setGenre(e.target.value)}>
           <option value="">Genere</option>
-          {GENRES.map((g) => (
+          {GENRES.map(g => (
             <option key={g} value={g}>{g}</option>
           ))}
         </select>
@@ -125,12 +122,17 @@ export default function BookForm({
         <input style={styles.input} placeholder="Serie (opzionale)"
           value={series} onChange={(e) => setSeries(e.target.value)} />
 
-        <select style={styles.input}
+        {/* COUNTRY DROPDOWN */}
+        <select
+          style={styles.input}
           value={country}
-          onChange={(e) => setCountry(e.target.value)}>
+          onChange={(e) => setCountry(e.target.value)}
+        >
           <option value="">Paese</option>
-          {COUNTRIES.map((c) => (
-            <option key={c} value={c}>{c}</option>
+          {COUNTRIES.map(c => (
+            <option key={c.code} value={c.name}>
+              {c.flag} {c.name}
+            </option>
           ))}
         </select>
 
@@ -141,9 +143,12 @@ export default function BookForm({
           value={publicationYear}
           onChange={(e) => setPublicationYear(Number(e.target.value))} />
 
-        <select style={styles.input}
+        {/* MONTH DROPDOWN */}
+        <select
+          style={styles.input}
           value={readingMonth}
-          onChange={(e) => setReadingMonth(Number(e.target.value))}>
+          onChange={(e) => setReadingMonth(Number(e.target.value))}
+        >
           <option value="">Mese lettura</option>
           {MONTHS.map((m, i) => (
             <option key={m} value={i + 1}>{m}</option>
@@ -154,14 +159,14 @@ export default function BookForm({
           value={readingYear}
           onChange={(e) => setReadingYear(Number(e.target.value))} />
 
-        {/* ⭐ CLASSICO */}
-        <label style={styles.checkboxRow}>
+        {/* CLASSICO */}
+        <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <input
             type="checkbox"
             checked={isClassic}
             onChange={(e) => setIsClassic(e.target.checked)}
           />
-          <span>Classico</span>
+          Classico
         </label>
 
         <div style={styles.actions}>
@@ -173,54 +178,12 @@ export default function BookForm({
   )
 }
 
-/* STILI */
 const styles: Record<string, React.CSSProperties> = {
-  overlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(0,0,0,0.35)',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  modal: {
-    background: '#fff',
-    padding: '16px',
-    borderRadius: '12px',
-    width: '100%',
-    maxWidth: '380px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px'
-  },
+  overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', justifyContent: 'center', alignItems: 'center' },
+  modal: { background: '#fff', padding: '16px', borderRadius: '12px', width: '100%', maxWidth: '380px', display: 'flex', flexDirection: 'column', gap: '10px' },
   title: { fontSize: '16px', fontWeight: 600 },
-  input: {
-    padding: '10px',
-    borderRadius: '8px',
-    border: '1px solid #ddd'
-  },
-  checkboxRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    fontSize: '14px',
-    marginTop: '4px'
-  },
-  actions: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    marginTop: '10px'
-  },
-  cancel: {
-    padding: '8px 12px',
-    background: '#f3f3f3',
-    border: 'none',
-    borderRadius: '8px'
-  },
-  save: {
-    padding: '8px 12px',
-    background: '#e8edff',
-    border: 'none',
-    borderRadius: '8px'
-  }
+  input: { padding: '10px', borderRadius: '8px', border: '1px solid #ddd' },
+  actions: { display: 'flex', justifyContent: 'space-between', marginTop: '10px' },
+  cancel: { padding: '8px 12px', background: '#f3f3f3', border: 'none', borderRadius: '8px' },
+  save: { padding: '8px 12px', background: '#e8edff', border: 'none', borderRadius: '8px' }
 }
