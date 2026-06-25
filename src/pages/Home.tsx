@@ -6,11 +6,11 @@ type Book = {
   author: string
   pages: number
   readingYear?: number
+  classic?: boolean
 }
 
 export default function Home() {
   const [books, setBooks] = useState<Book[]>([])
-  const [toast, setToast] = useState<string | null>(null)
 
   useEffect(() => {
     load()
@@ -44,32 +44,16 @@ export default function Home() {
     0
   )
 
-  useEffect(() => {
-    const booksKey = 'rt_books_notified'
-    const pagesKey = 'rt_pages_notified'
+  const classicsThisYear = booksThisYear.filter(
+    (b) => b.classic
+  )
 
-    const booksNotified = localStorage.getItem(booksKey)
-    const pagesNotified = localStorage.getItem(pagesKey)
-
-    if (booksThisYear.length > booksLastYear.length && !booksNotified) {
-      setToast('🎉 Hai superato i libri dell’anno scorso!')
-      localStorage.setItem(booksKey, 'true')
-      setTimeout(() => setToast(null), 3000)
-    }
-
-    if (pagesThisYear > pagesLastYear && !pagesNotified) {
-      setTimeout(() => {
-        setToast('📚 Hai superato le pagine dell’anno scorso!')
-        localStorage.setItem(pagesKey, 'true')
-        setTimeout(() => setToast(null), 3000)
-      }, 3500)
-    }
-  }, [booksThisYear.length, pagesThisYear, pagesLastYear])
-
-  const readBooksThisYear = booksThisYear
+  const classicsLastYear = booksLastYear.filter(
+    (b) => b.classic
+  )
 
   const authorsThisYear = new Set(
-    readBooksThisYear.map((b) => b.author)
+    booksThisYear.map((b) => b.author)
   )
 
   const authorsPreviousYears = new Set(
@@ -82,7 +66,17 @@ export default function Home() {
     (a) => !authorsPreviousYears.has(a)
   )
 
-  const longestThisYear = [...readBooksThisYear].sort(
+  const authorsBeforeLastYear = new Set(
+    readBooks
+      .filter((b) => b.readingYear && b.readingYear < previousYear)
+      .map((b) => b.author)
+  )
+
+  const newAuthorsLastYear = [...new Set(
+    booksLastYear.map((b) => b.author)
+  )].filter((a) => !authorsBeforeLastYear.has(a)).length
+
+  const longestThisYear = [...booksThisYear].sort(
     (a, b) => (b.pages || 0) - (a.pages || 0)
   )[0]
 
@@ -92,33 +86,30 @@ export default function Home() {
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.header}>
-        📚 Reading Tracker
-      </h2>
-
-      {toast && <div style={styles.toast}>{toast}</div>}
+      <h2 style={styles.header}>📚 Reading Tracker</h2>
 
       {/* QUEST’ANNO */}
-      <h3 style={styles.sectionTitle}>
-        Quest’anno {currentYear}
-      </h3>
+      <h3 style={styles.sectionTitle}>Quest’anno</h3>
 
       <div style={styles.grid}>
         <Card title="Libri letti" value={booksThisYear.length} />
         <Card title="Pagine lette" value={pagesThisYear} />
         <Card title="Nuovi autori" value={newAuthorsThisYear.length} />
+        <Card title="Classici" value={classicsThisYear.length} />
       </div>
 
       <BookCard title="Libro più lungo" book={longestThisYear} />
 
-      {/* ANNO SCORSO */}
+      {/* CONFRONTO */}
       <h3 style={styles.sectionTitle}>
-        Anno scorso {previousYear}
+        Confronto con {previousYear}
       </h3>
 
       <div style={styles.grid}>
         <Card title="Libri letti" value={booksLastYear.length} />
         <Card title="Pagine lette" value={pagesLastYear} />
+        <Card title="Nuovi autori" value={newAuthorsLastYear} />
+        <Card title="Classici" value={classicsLastYear.length} />
       </div>
 
       <BookCard title="Libro più lungo" book={longestLastYear} />
@@ -126,7 +117,7 @@ export default function Home() {
   )
 }
 
-/* CARD KPI */
+/* CARD */
 function Card({ title, value }: { title: string; value: any }) {
   return (
     <div style={styles.card}>
@@ -136,14 +127,8 @@ function Card({ title, value }: { title: string; value: any }) {
   )
 }
 
-/* BOOK CARD STYLE PREMIUM */
-function BookCard({
-  title,
-  book
-}: {
-  title: string
-  book?: any
-}) {
+/* BOOK CARD */
+function BookCard({ title, book }: { title: string; book?: any }) {
   return (
     <div style={styles.bookCard}>
       <p style={styles.cardTitle}>{title}</p>
@@ -171,8 +156,7 @@ const styles: Record<string, React.CSSProperties> = {
 
   header: {
     fontSize: '20px',
-    fontWeight: 700,
-    color: '#111'
+    fontWeight: 700
   },
 
   sectionTitle: {
@@ -228,17 +212,5 @@ const styles: Record<string, React.CSSProperties> = {
   bookPages: {
     fontSize: '13px',
     color: '#777'
-  },
-
-  toast: {
-    position: 'fixed',
-    top: 20,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    background: '#111827',
-    color: '#fff',
-    padding: '10px 14px',
-    borderRadius: '12px',
-    fontSize: '13px'
   }
 }
