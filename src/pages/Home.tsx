@@ -61,66 +61,67 @@ export default function Home() {
     (b: any) => b.isClassic
   )
 
-  /* ✅ ORA USATO IN UI */
+  const classicsLastYear = booksLastYear.filter(
+    (b: any) => b.isClassic
+  )
+
   const longestThisYear = [...booksThisYear].sort(
+    (a, b) => (b.pages || 0) - (a.pages || 0)
+  )[0]
+
+  const longestLastYear = [...booksLastYear].sort(
     (a, b) => (b.pages || 0) - (a.pages || 0)
   )[0]
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>🏠 Home</h2>
+      <h2 style={styles.title}>🏠 Dashboard lettura</h2>
 
-      {/* KPI ANNO CORRENTE */}
+      {/* =======================
+          ANNO CORRENTE
+      ======================= */}
+      <h3 style={styles.sectionTitle}>
+        Attività {currentYear}
+      </h3>
+
       <div style={styles.grid}>
         <Card title="Libri letti" value={booksThisYear.length} />
-
         <Card title="Pagine lette" value={pagesThisYear} />
-
-        <Card
-          title="Nuovi autori"
-          value={newAuthorsThisYear.length}
-        />
-
-        <Card
-          title="Classici letti"
-          value={classicsThisYear.length}
-        />
-
-        <Card
-          title="Libro più lungo"
-          value={
-            longestThisYear
-              ? `${longestThisYear.title} - ${longestThisYear.author} (${longestThisYear.pages})`
-              : '-'
-          }
-        />
+        <Card title="Nuovi autori" value={newAuthorsThisYear.length} />
+        <Card title="Classici" value={classicsThisYear.length} />
       </div>
 
-      {/* CONFRONTO ANNO PRECEDENTE */}
-      <h3 style={styles.subTitle}>
-        Confronto {previousYear}
+      <BookCard
+        title="Libro più lungo dell’anno"
+        book={longestThisYear}
+      />
+
+      {/* =======================
+          ANNO PRECEDENTE
+      ======================= */}
+      <h3 style={styles.sectionTitle}>
+        Confronto con il {previousYear}
       </h3>
 
       <div style={styles.grid}>
         <Card title="Libri letti" value={booksLastYear.length} />
-
         <Card title="Pagine lette" value={pagesLastYear} />
-
-        <Card
-          title="Nuovi autori"
-          value={authorsLastYears.size}
-        />
-
-        <Card
-          title="Classici letti"
-          value={booksLastYear.filter((b: any) => b.isClassic).length}
-        />
+        <Card title="Nuovi autori" value={authorsLastYears.size} />
+        <Card title="Classici" value={classicsLastYear.length} />
       </div>
+
+      <BookCard
+        title="Libro più lungo dell’anno"
+        book={longestLastYear}
+      />
     </div>
   )
 }
 
-/* CARD */
+/* =========================
+   CARD KPI
+========================= */
+
 function Card({ title, value }: { title: string; value: any }) {
   return (
     <div style={styles.card}>
@@ -130,7 +131,38 @@ function Card({ title, value }: { title: string; value: any }) {
   )
 }
 
-/* STILI */
+/* =========================
+   BOOK CARD (NUOVA UI)
+========================= */
+
+function BookCard({
+  title,
+  book
+}: {
+  title: string
+  book?: { title: string; author: string; pages: number }
+}) {
+  return (
+    <div style={styles.bookCard}>
+      <p style={styles.cardTitle}>{title}</p>
+
+      {book ? (
+        <>
+          <p style={styles.bookTitle}>{book.title}</p>
+          <p style={styles.bookAuthor}>{book.author}</p>
+          <p style={styles.bookPages}>{book.pages} pagine</p>
+        </>
+      ) : (
+        <p style={styles.cardValue}>-</p>
+      )}
+    </div>
+  )
+}
+
+/* =========================
+   STILI
+========================= */
+
 const styles: Record<string, React.CSSProperties> = {
   container: {
     display: 'flex',
@@ -143,14 +175,15 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700
   },
 
-  subTitle: {
-    fontSize: '16px',
+  sectionTitle: {
+    fontSize: '15px',
     fontWeight: 600,
     marginTop: '10px'
   },
 
   grid: {
     display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
     gap: '10px'
   },
 
@@ -167,7 +200,33 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   cardValue: {
-    fontSize: '18px',
+    fontSize: '16px',
     fontWeight: 600
+  },
+
+  bookCard: {
+    padding: '14px',
+    borderRadius: '14px',
+    border: '1px solid #e5e7eb',
+    background: '#f9fafb',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px'
+  },
+
+  bookTitle: {
+    fontSize: '15px',
+    fontWeight: 700,
+    color: '#111'
+  },
+
+  bookAuthor: {
+    fontSize: '13px',
+    color: '#555'
+  },
+
+  bookPages: {
+    fontSize: '13px',
+    color: '#777'
   }
 }
