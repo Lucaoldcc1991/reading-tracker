@@ -8,7 +8,7 @@ type Book = {
   author: string
   genre: string
   series?: string
-  isClassic?: boolean
+  country?: string
   pages: number
   publicationYear?: number
   readingMonth?: number
@@ -35,10 +35,6 @@ export default function Library() {
     setBooks(data)
   }
 
-  /* =========================
-     SEARCH (AGGIORNATA)
-  ========================= */
-
   const filteredBooks = books.filter((b) => {
     const q = search.toLowerCase()
 
@@ -46,7 +42,8 @@ export default function Library() {
       b.title.toLowerCase().includes(q) ||
       b.author.toLowerCase().includes(q) ||
       b.genre.toLowerCase().includes(q) ||
-      (b.series ? b.series.toLowerCase().includes(q) : false)
+      (b.series || '').toLowerCase().includes(q) ||
+      (b.country || '').toLowerCase().includes(q)
     )
   })
 
@@ -70,30 +67,25 @@ export default function Library() {
     loadBooks()
   }
 
+  const getFlag = (country?: string) => {
+    if (!country) return ''
+    return country
+      .toUpperCase()
+      .replace(/./g, (char) =>
+        String.fromCodePoint(127397 + char.charCodeAt(0))
+      )
+  }
+
   return (
     <div style={styles.container}>
-      <h2
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          marginBottom: "20px",
-          fontSize: "28px",
-          fontWeight: 700,
-          color: "#1f2937",
-        }}
-      >
-        <span style={{ fontSize: "30px" }}>📚</span>
-        <span>Libreria</span>
-      </h2>
+      <h2 style={styles.header}>📚 Libreria</h2>
 
-      {/* COUNTER */}
       <div style={styles.counter}>
         📊 {filteredBooks.length} libri
       </div>
 
       <input
-        placeholder="Cerca per titolo, autore, genere o serie..."
+        placeholder="Cerca titolo, autore, genere, serie o paese..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         style={styles.search}
@@ -124,10 +116,15 @@ export default function Library() {
                 {book.author} · {book.genre}
               </p>
 
-              {/* SERIE (NUOVO) */}
               {book.series && (
-                <p style={styles.series}>
-                  📚 {book.series}
+                <p style={styles.meta}>
+                  📚 Serie: {book.series}
+                </p>
+              )}
+
+              {book.country && (
+                <p style={styles.country}>
+                  {getFlag(book.country)} {book.country}
                 </p>
               )}
 
@@ -146,7 +143,10 @@ export default function Library() {
             </div>
 
             <div style={styles.actions}>
-              <button onClick={() => openEdit(book)} style={styles.edit}>
+              <button
+                onClick={() => openEdit(book)}
+                style={styles.edit}
+              >
                 ✏️
               </button>
 
@@ -164,7 +164,9 @@ export default function Library() {
   )
 }
 
-/* STILI */
+/* =========================
+   STILI
+========================= */
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
@@ -172,17 +174,23 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     gap: '12px'
   },
+
+  header: {
+    fontSize: '22px',
+    fontWeight: 700
+  },
+
   counter: {
     fontSize: '13px',
-    color: '#666',
-    fontWeight: 500
+    color: '#666'
   },
+
   search: {
     padding: '10px',
     borderRadius: '10px',
-    border: '1px solid #ddd',
-    outline: 'none'
+    border: '1px solid #ddd'
   },
+
   add: {
     padding: '10px',
     borderRadius: '10px',
@@ -191,11 +199,13 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     fontWeight: 500
   },
+
   list: {
     display: 'flex',
     flexDirection: 'column',
     gap: '10px'
   },
+
   card: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -204,29 +214,33 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '12px',
     background: '#fff'
   },
+
   info: {
     display: 'flex',
     flexDirection: 'column',
     gap: '4px'
   },
+
   titleBook: {
     fontWeight: 600,
     fontSize: '15px'
   },
+
   meta: {
     fontSize: '13px',
     color: '#666'
   },
-  series: {
-    fontSize: '12px',
-    color: '#888',
-    marginTop: 2
+
+  country: {
+    fontSize: '13px',
+    color: '#444'
   },
+
   actions: {
     display: 'flex',
-    gap: '8px',
-    alignItems: 'start'
+    gap: '8px'
   },
+
   edit: {
     background: '#f3f3ff',
     border: 'none',
@@ -234,6 +248,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '8px',
     cursor: 'pointer'
   },
+
   delete: {
     background: '#fee2e2',
     border: 'none',

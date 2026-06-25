@@ -43,11 +43,6 @@ class AppDatabase extends Dexie {
   constructor() {
     super('readingTrackerDB')
 
-    /* =========================
-       VERSIONE 1 (ESISTENTE)
-       NON MODIFICARE PER NON PERDERE DATI
-    ========================= */
-
     this.version(1).stores({
       books:
         '++id, title, author, genre, pages, readingYear, createdAt',
@@ -55,22 +50,12 @@ class AppDatabase extends Dexie {
         '++id, title, author, genre, createdAt'
     })
 
-    /* =========================
-       VERSIONE 2 (MIGRAZIONE)
-       AGGIUNTA CAMPI: country, series, publisher
-    ========================= */
-
-    this.version(2)
-      .stores({
-        books:
-          '++id, title, author, genre, series, country, publisher, pages, readingYear, createdAt',
-        wishlist:
-          '++id, title, author, genre, createdAt'
-      })
-      .upgrade(() => {
-        // nessuna trasformazione dati necessaria
-        // Dexie gestisce automaticamente i nuovi campi opzionali
-      })
+    this.version(2).stores({
+      books:
+        '++id, title, author, genre, country, series, pages, readingYear, createdAt',
+      wishlist:
+        '++id, title, author, genre, createdAt'
+    })
   }
 }
 

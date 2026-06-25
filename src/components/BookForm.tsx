@@ -14,6 +14,73 @@ type Book = {
   readingYear?: number
 }
 
+/* =========================
+   GENERI
+========================= */
+
+const GENRES = [
+  'Giallo/Noir/Legal',
+  'Thriller',
+  'Horror/Gotico/Paranormale',
+  'Realista/Psicologico/Filosofico',
+  'Narrativa per ragazzi',
+  'Saggio',
+  'Fumetto',
+  'Storico/Autobiografico',
+  'Fantascienza',
+  'Fantasy',
+  'Avventura',
+  'Distopico'
+]
+
+/* =========================
+   MESI
+========================= */
+
+const MONTHS = [
+  'Gennaio',
+  'Febbraio',
+  'Marzo',
+  'Aprile',
+  'Maggio',
+  'Giugno',
+  'Luglio',
+  'Agosto',
+  'Settembre',
+  'Ottobre',
+  'Novembre',
+  'Dicembre'
+]
+
+/* =========================
+   PAESI (semplificato ma completo UI)
+   (ISO standard + nomi leggibili)
+========================= */
+
+const COUNTRIES = [
+  'Italia',
+  'Stati Uniti',
+  'Regno Unito',
+  'Francia',
+  'Germania',
+  'Spagna',
+  'Giappone',
+  'Cina',
+  'Corea del Sud',
+  'Russia',
+  'Brasile',
+  'Canada',
+  'Australia',
+  'India',
+  'Messico',
+  'Svezia',
+  'Norvegia',
+  'Paesi Bassi',
+  'Portogallo',
+  'Grecia',
+  'Altro'
+]
+
 export default function BookForm({
   book,
   onClose
@@ -79,44 +146,120 @@ export default function BookForm({
           {book ? 'Modifica libro' : 'Aggiungi libro'}
         </h3>
 
-        <input style={styles.input} placeholder="Titolo" value={title}
-          onChange={(e) => setTitle(e.target.value)} />
+        <input
+          style={styles.input}
+          placeholder="Titolo"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
 
-        <input style={styles.input} placeholder="Autore" value={author}
-          onChange={(e) => setAuthor(e.target.value)} />
+        <input
+          style={styles.input}
+          placeholder="Autore"
+          value={author}
+          onChange={(e) => setAuthor(e.target.value)}
+        />
 
-        <input style={styles.input} placeholder="Genere" value={genre}
-          onChange={(e) => setGenre(e.target.value)} />
+        {/* GENERE */}
+        <select
+          style={styles.input}
+          value={genre}
+          onChange={(e) => setGenre(e.target.value)}
+        >
+          <option value="">Seleziona genere</option>
+          {GENRES.map((g) => (
+            <option key={g} value={g}>
+              {g}
+            </option>
+          ))}
+        </select>
 
-        <input style={styles.input} placeholder="Serie (opzionale)" value={series}
-          onChange={(e) => setSeries(e.target.value)} />
+        {/* SERIE */}
+        <input
+          style={styles.input}
+          placeholder="Serie (opzionale)"
+          value={series}
+          onChange={(e) => setSeries(e.target.value)}
+        />
 
-        <input style={styles.input} placeholder="Paese (opzionale)" value={country}
-          onChange={(e) => setCountry(e.target.value)} />
+        {/* PAESE */}
+        <select
+          style={styles.input}
+          value={country}
+          onChange={(e) => setCountry(e.target.value)}
+        >
+          <option value="">Seleziona paese</option>
+          {COUNTRIES.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
 
-        <input style={styles.input} type="number" placeholder="Pagine"
-          value={pages} onChange={(e) => setPages(Number(e.target.value))} />
+        {/* PAGINE */}
+        <input
+          style={styles.input}
+          type="number"
+          placeholder="Pagine"
+          value={pages}
+          onChange={(e) => setPages(Number(e.target.value))}
+        />
 
-        <input style={styles.input} type="number" placeholder="Anno pubblicazione"
+        {/* ANNO PUBBLICAZIONE */}
+        <input
+          style={styles.input}
+          type="number"
+          placeholder="Anno pubblicazione"
           value={publicationYear}
-          onChange={(e) => setPublicationYear(Number(e.target.value))} />
+          onChange={(e) =>
+            setPublicationYear(Number(e.target.value))
+          }
+        />
 
-        <input style={styles.input} type="number" placeholder="Mese lettura"
+        {/* MESE LETTURA */}
+        <select
+          style={styles.input}
           value={readingMonth}
-          onChange={(e) => setReadingMonth(Number(e.target.value))} />
+          onChange={(e) =>
+            setReadingMonth(Number(e.target.value))
+          }
+        >
+          <option value="">Mese lettura</option>
+          {MONTHS.map((m, i) => (
+            <option key={m} value={i + 1}>
+              {m}
+            </option>
+          ))}
+        </select>
 
-        <input style={styles.input} type="number" placeholder="Anno lettura"
+        {/* ANNO LETTURA */}
+        <input
+          style={styles.input}
+          type="number"
+          placeholder="Anno lettura"
           value={readingYear}
-          onChange={(e) => setReadingYear(Number(e.target.value))} />
+          onChange={(e) =>
+            setReadingYear(Number(e.target.value))
+          }
+        />
 
         <div style={styles.actions}>
-          <button onClick={onClose} style={styles.cancel}>Annulla</button>
-          <button onClick={save} style={styles.save}>Salva</button>
+          <button onClick={onClose} style={styles.cancel}>
+            Annulla
+          </button>
+
+          <button onClick={save} style={styles.save}>
+            Salva
+          </button>
         </div>
       </div>
     </div>
   )
 }
+
+/* =========================
+   STILI
+========================= */
 
 const styles: Record<string, React.CSSProperties> = {
   overlay: {
@@ -125,7 +268,8 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'rgba(0,0,0,0.35)',
     display: 'flex',
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    padding: '10px'
   },
   modal: {
     background: '#fff',
@@ -137,7 +281,10 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     gap: '10px'
   },
-  title: { fontSize: '16px', fontWeight: 600 },
+  title: {
+    fontSize: '16px',
+    fontWeight: 600
+  },
   input: {
     padding: '10px',
     borderRadius: '8px',

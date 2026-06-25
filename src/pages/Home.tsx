@@ -11,7 +11,6 @@ type Book = {
 
 export default function Home() {
   const [books, setBooks] = useState<Book[]>([])
-  const [toast, setToast] = useState<string | null>(null)
 
   useEffect(() => {
     load()
@@ -27,157 +26,140 @@ export default function Home() {
 
   const readBooks = books.filter((b) => b.readingYear)
 
-  const booksThisYear = readBooks.filter(
+  const thisYearBooks = readBooks.filter(
     (b) => b.readingYear === currentYear
   )
 
-  const booksLastYear = readBooks.filter(
+  const lastYearBooks = readBooks.filter(
     (b) => b.readingYear === previousYear
   )
 
-  const pagesThisYear = booksThisYear.reduce(
-    (sum, b) => sum + (b.pages || 0),
-    0
+  const sumPages = (arr: Book[]) =>
+    arr.reduce((sum, b) => sum + (b.pages || 0), 0)
+
+  const thisYearPages = sumPages(thisYearBooks)
+  const lastYearPages = sumPages(lastYearBooks)
+
+  const newAuthorsThisYear = new Set(
+    thisYearBooks.map((b) => b.author)
   )
 
-  const pagesLastYear = booksLastYear.reduce(
-    (sum, b) => sum + (b.pages || 0),
-    0
+  const newAuthorsLastYear = new Set(
+    lastYearBooks.map((b) => b.author)
   )
 
-  const authorsThisYear = new Set(
-    booksThisYear.map((b) => b.author)
-  )
-
-  const authorsPreviousYears = new Set(
-    readBooks
-      .filter((b) => b.readingYear && b.readingYear < currentYear)
-      .map((b) => b.author)
-  )
-
-  const newAuthorsThisYear = [...authorsThisYear].filter(
-    (a) => !authorsPreviousYears.has(a)
-  )
-
-  const classicThisYear = booksThisYear.filter(
-    (b) => b.isClassic
-  )
-
-  const longestThisYear = [...booksThisYear].sort(
+  const longestThisYear = [...thisYearBooks].sort(
     (a, b) => (b.pages || 0) - (a.pages || 0)
   )[0]
 
-  /* TOAST LOGIC */
-  useEffect(() => {
-    const booksKey = 'rt_books_notified'
-    const pagesKey = 'rt_pages_notified'
+  const longestLastYear = [...lastYearBooks].sort(
+    (a, b) => (b.pages || 0) - (a.pages || 0)
+  )[0]
 
-    const booksNotified = localStorage.getItem(booksKey)
-    const pagesNotified = localStorage.getItem(pagesKey)
+  const classicsThisYear = thisYearBooks.filter(
+    (b) => b.isClassic
+  )
 
-    if (booksThisYear.length > booksLastYear.length && !booksNotified) {
-      setToast('🎉 Libri superati rispetto all’anno scorso')
-      localStorage.setItem(booksKey, 'true')
-      setTimeout(() => setToast(null), 3000)
-    }
-
-    if (pagesThisYear > pagesLastYear && !pagesNotified) {
-      setTimeout(() => {
-        setToast('📚 Pagine superate rispetto all’anno scorso')
-        localStorage.setItem(pagesKey, 'true')
-        setTimeout(() => setToast(null), 3000)
-      }, 3000)
-    }
-  }, [booksThisYear.length, pagesThisYear, pagesLastYear])
+  const classicsLastYear = lastYearBooks.filter(
+    (b) => b.isClassic
+  )
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>🏠 Home</h2>
+      {/* HEADER */}
+      <div style={styles.header}>
+        <h2 style={styles.title}>🏠 Home</h2>
+        <div style={styles.yearBadge}>Anno {currentYear}</div>
+      </div>
 
-      {toast && <div style={styles.toast}>{toast}</div>}
-
-      {/* KPI PRIMARY */}
+      {/* KPI ANNO CORRENTE */}
       <div style={styles.grid}>
-        <Card label="Libri anno" value={booksThisYear.length} icon="📚" />
-        <Card label="Pagine anno" value={pagesThisYear} icon="📄" />
-        <Card label="Nuovi autori" value={newAuthorsThisYear.length} icon="👤" />
-        <Card label="Classici" value={classicThisYear.length} icon="🏛️" />
+        <Card title="Libri letti" value={thisYearBooks.length} />
+        <Card title="Pagine lette" value={thisYearPages} />
+        <Card title="Nuovi autori" value={newAuthorsThisYear.size} />
+        <Card title="Classici" value={classicsThisYear.length} />
+        <Card
+          title="Libro più lungo"
+          value={
+            longestThisYear
+              ? `${longestThisYear.title} (${longestThisYear.pages} pagine)`
+              : '-'
+          }
+        />
       </div>
 
-      {/* FEATURE BOOK */}
-      <div style={styles.featureCard}>
-        <p style={styles.sectionLabel}>Libro più lungo dell’anno</p>
+      {/* CONFRONTO ANNO PRECEDENTE */}
+      <div style={styles.compareBox}>
+        <div style={styles.compareHeader}>
+          Confronto con {previousYear}
+        </div>
 
-        {longestThisYear ? (
-          <>
-            <p style={styles.featureTitle}>
-              {longestThisYear.title}
-            </p>
+        <div style={styles.compareGrid}>
+          <MiniCard
+            label="Libri"
+            a={thisYearBooks.length}
+            b={lastYearBooks.length}
+          />
+          <MiniCard
+            label="Pagine"
+            a={thisYearPages}
+            b={lastYearPages}
+          />
+          <MiniCard
+            label="Autori"
+            a={newAuthorsThisYear.size}
+            b={newAuthorsLastYear.size}
+          />
+          <MiniCard
+            label="Classici"
+            a={classicsThisYear.length}
+            b={classicsLastYear.length}
+          />
 
-            <p style={styles.featureSub}>
-              {longestThisYear.author}
-            </p>
-
-            <p style={styles.featureMeta}>
-              {longestThisYear.pages} pagine
-            </p>
-          </>
-        ) : (
-          <p style={styles.featureMeta}>-</p>
-        )}
-      </div>
-
-      {/* COMPARISON */}
-      <div style={styles.compare}>
-        <p style={styles.sectionLabel}>Confronto anno precedente</p>
-
-        <Row icon="📚" label="Libri" value={`${booksThisYear.length} vs ${booksLastYear.length}`} />
-        <Row icon="📄" label="Pagine" value={`${pagesThisYear} vs ${pagesLastYear}`} />
-        <Row icon="👤" label="Autori nuovi" value={newAuthorsThisYear.length} />
-        <Row icon="🏛️" label="Classici" value={classicThisYear.length} />
+          <div style={styles.fullRow}>
+            <div style={styles.longestLabel}>
+              Libro più lungo
+            </div>
+            <div style={styles.longestValue}>
+              {longestThisYear?.title || '-'} <span style={{ opacity: 0.4, margin: '0 6px' }}>/</span> {longestLastYear?.title || '-'}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
 
-/* COMPONENTI */
+/* =========================
+   COMPONENTI
+========================= */
 
-function Card({
-  label,
-  value,
-  icon
-}: {
-  label: string
-  value: any
-  icon: string
-}) {
+function Card({ title, value }: any) {
   return (
     <div style={styles.card}>
-      <div style={styles.icon}>{icon}</div>
-      <p style={styles.cardLabel}>{label}</p>
-      <p style={styles.cardValue}>{value}</p>
+      <div style={styles.cardTitle}>{title}</div>
+      <div style={styles.cardValue}>{value}</div>
     </div>
   )
 }
 
-function Row({
-  icon,
-  label,
-  value
-}: {
-  icon: string
-  label: string
-  value: any
-}) {
+function MiniCard({ label, a, b }: any) {
   return (
-    <div style={styles.row}>
-      <span>{icon} {label}</span>
-      <span>{value}</span>
+    <div style={styles.miniCard}>
+      <div style={styles.miniLabel}>{label}</div>
+
+      <div style={styles.miniValue}>
+        <span>{a}</span>
+        <span style={{ opacity: 0.25, margin: '0 6px' }}>/</span>
+        <span style={{ opacity: 0.7 }}>{b}</span>
+      </div>
     </div>
   )
 }
 
-/* STILI */
+/* =========================
+   STILI
+========================= */
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
@@ -186,94 +168,100 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '14px'
   },
 
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+
   title: {
     fontSize: '22px',
     fontWeight: 700
   },
 
+  yearBadge: {
+    fontSize: '12px',
+    padding: '4px 10px',
+    borderRadius: '999px',
+    background: '#eef2ff',
+    color: '#3730a3'
+  },
+
   grid: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
     gap: '10px'
   },
 
   card: {
     padding: '14px',
-    borderRadius: '16px',
+    borderRadius: '12px',
     border: '1px solid #eee',
     background: '#fff'
   },
 
-  icon: {
-    fontSize: '18px',
-    marginBottom: '6px'
-  },
-
-  cardLabel: {
+  cardTitle: {
     fontSize: '12px',
     color: '#777'
   },
 
   cardValue: {
     fontSize: '18px',
-    fontWeight: 700
+    fontWeight: 600
   },
 
-  featureCard: {
-    padding: '16px',
-    borderRadius: '16px',
+  compareBox: {
+    marginTop: '10px',
+    padding: '14px',
+    borderRadius: '12px',
     background: '#f9fafb',
     border: '1px solid #eee'
   },
 
-  sectionLabel: {
-    fontSize: '12px',
-    color: '#777',
-    marginBottom: '6px'
+  compareHeader: {
+    fontSize: '13px',
+    fontWeight: 600,
+    marginBottom: '10px',
+    color: '#555'
   },
 
-  featureTitle: {
-    fontSize: '16px',
-    fontWeight: 700
+  compareGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '10px'
   },
 
-  featureSub: {
-    fontSize: '14px',
-    color: '#444'
-  },
-
-  featureMeta: {
-    fontSize: '12px',
-    color: '#888'
-  },
-
-  compare: {
-    padding: '14px',
-    borderRadius: '16px',
-    border: '1px solid #eee',
+  miniCard: {
+    padding: '10px',
+    borderRadius: '10px',
     background: '#fff',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px'
+    border: '1px solid #eee'
   },
 
-  row: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    fontSize: '13px',
-    color: '#444'
+  miniLabel: {
+    fontSize: '11px',
+    color: '#777'
   },
 
-  toast: {
-    position: 'fixed',
-    top: '20px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    background: '#111827',
-    color: '#fff',
-    padding: '10px 14px',
-    borderRadius: '12px',
+  miniValue: {
+    fontSize: '14px',
+    fontWeight: 600
+  },
+
+  fullRow: {
+    gridColumn: '1 / -1',
+    padding: '10px',
+    borderRadius: '10px',
+    background: '#fff',
+    border: '1px solid #eee'
+  },
+
+  longestLabel: {
+    fontSize: '11px',
+    color: '#777'
+  },
+
+  longestValue: {
     fontSize: '13px',
-    zIndex: 9999
+    fontWeight: 500
   }
 }
