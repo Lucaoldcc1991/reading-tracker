@@ -37,6 +37,10 @@ export default function Stats() {
           (b) => String(b.readingYear) === yearFilter
         )
 
+  /* =========================
+     KPI BASE
+  ========================= */
+
   const totalBooks = filteredBooks.length
 
   const totalPages = filteredBooks.reduce(
@@ -44,33 +48,61 @@ export default function Stats() {
     0
   )
 
+  const classicBooks = filteredBooks.filter(
+    (b: any) => b.classic === true
+  )
+
+  const totalClassics = classicBooks.length
+
+  /* =========================
+     AUTORI
+  ========================= */
+
   const authorsMap: Record<string, number> = {}
+
   filteredBooks.forEach((b) => {
-    authorsMap[b.author] = (authorsMap[b.author] || 0) + 1
+    authorsMap[b.author] =
+      (authorsMap[b.author] || 0) + 1
   })
 
   const topAuthors = Object.entries(authorsMap).sort(
     (a, b) => b[1] - a[1]
   )
 
+  /* =========================
+     PAESI
+  ========================= */
+
   const countryMap: Record<string, number> = {}
+
   filteredBooks.forEach((b) => {
     if (!b.country) return
-    countryMap[b.country] = (countryMap[b.country] || 0) + 1
+    countryMap[b.country] =
+      (countryMap[b.country] || 0) + 1
   })
 
   const countries = Object.entries(countryMap).sort(
     (a, b) => b[1] - a[1]
   )
 
+  /* =========================
+     GENERI
+  ========================= */
+
   const genresMap: Record<string, number> = {}
+
   filteredBooks.forEach((b) => {
-    genresMap[b.genre] = (genresMap[b.genre] || 0) + 1
+    genresMap[b.genre] =
+      (genresMap[b.genre] || 0) + 1
   })
 
   const genres = Object.entries(genresMap).sort(
     (a, b) => b[1] - a[1]
   )
+
+  /* =========================
+     LIBRO PIÙ LUNGO
+  ========================= */
 
   const longestBook = [...filteredBooks].sort(
     (a, b) => (b.pages || 0) - (a.pages || 0)
@@ -94,7 +126,7 @@ export default function Stats() {
         ))}
       </select>
 
-      {/* KPI ORIZZONTALI */}
+      {/* KPI */}
       <div style={styles.kpiRow}>
         <div style={styles.kpiItem}>
           <p style={styles.kpiLabel}>Libri</p>
@@ -105,9 +137,14 @@ export default function Stats() {
           <p style={styles.kpiLabel}>Pagine</p>
           <p style={styles.kpiValue}>{totalPages}</p>
         </div>
+
+        <div style={styles.kpiItem}>
+          <p style={styles.kpiLabel}>Classici</p>
+          <p style={styles.kpiValue}>{totalClassics}</p>
+        </div>
       </div>
 
-      {/* BOOK CARD (STILE HOME) */}
+      {/* LIBRO PIÙ LUNGO */}
       <div style={styles.bookCard}>
         <p style={styles.cardTitle}>Libro più lungo</p>
 

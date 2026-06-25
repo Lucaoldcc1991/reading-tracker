@@ -10,6 +10,7 @@ type Book = {
 
 export default function Home() {
   const [books, setBooks] = useState<Book[]>([])
+  const [toast, setToast] = useState<string | null>(null)
 
   useEffect(() => {
     load()
@@ -43,29 +44,45 @@ export default function Home() {
     0
   )
 
+  useEffect(() => {
+    const booksKey = 'rt_books_notified'
+    const pagesKey = 'rt_pages_notified'
+
+    const booksNotified = localStorage.getItem(booksKey)
+    const pagesNotified = localStorage.getItem(pagesKey)
+
+    if (booksThisYear.length > booksLastYear.length && !booksNotified) {
+      setToast('🎉 Hai superato i libri dell’anno scorso!')
+      localStorage.setItem(booksKey, 'true')
+      setTimeout(() => setToast(null), 3000)
+    }
+
+    if (pagesThisYear > pagesLastYear && !pagesNotified) {
+      setTimeout(() => {
+        setToast('📚 Hai superato le pagine dell’anno scorso!')
+        localStorage.setItem(pagesKey, 'true')
+        setTimeout(() => setToast(null), 3000)
+      }, 3500)
+    }
+  }, [booksThisYear.length, pagesThisYear, pagesLastYear])
+
+  const readBooksThisYear = booksThisYear
+
   const authorsThisYear = new Set(
-    booksThisYear.map((b) => b.author)
+    readBooksThisYear.map((b) => b.author)
   )
 
-  const authorsLastYears = new Set(
+  const authorsPreviousYears = new Set(
     readBooks
       .filter((b) => b.readingYear && b.readingYear < currentYear)
       .map((b) => b.author)
   )
 
   const newAuthorsThisYear = [...authorsThisYear].filter(
-    (a) => !authorsLastYears.has(a)
+    (a) => !authorsPreviousYears.has(a)
   )
 
-  const classicsThisYear = booksThisYear.filter(
-    (b: any) => b.isClassic
-  )
-
-  const classicsLastYear = booksLastYear.filter(
-    (b: any) => b.isClassic
-  )
-
-  const longestThisYear = [...booksThisYear].sort(
+  const longestThisYear = [...readBooksThisYear].sort(
     (a, b) => (b.pages || 0) - (a.pages || 0)
   )[0]
 
@@ -75,53 +92,41 @@ export default function Home() {
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>🏠 Dashboard lettura</h2>
+      <h2 style={styles.header}>
+        📚 Reading Tracker
+      </h2>
 
-      {/* =======================
-          ANNO CORRENTE
-      ======================= */}
+      {toast && <div style={styles.toast}>{toast}</div>}
+
+      {/* QUEST’ANNO */}
       <h3 style={styles.sectionTitle}>
-        Attività {currentYear}
+        Quest’anno {currentYear}
       </h3>
 
       <div style={styles.grid}>
         <Card title="Libri letti" value={booksThisYear.length} />
         <Card title="Pagine lette" value={pagesThisYear} />
         <Card title="Nuovi autori" value={newAuthorsThisYear.length} />
-        <Card title="Classici" value={classicsThisYear.length} />
       </div>
 
-      <BookCard
-        title="Libro più lungo dell’anno"
-        book={longestThisYear}
-      />
+      <BookCard title="Libro più lungo" book={longestThisYear} />
 
-      {/* =======================
-          ANNO PRECEDENTE
-      ======================= */}
+      {/* ANNO SCORSO */}
       <h3 style={styles.sectionTitle}>
-        Confronto con il {previousYear}
+        Anno scorso {previousYear}
       </h3>
 
       <div style={styles.grid}>
         <Card title="Libri letti" value={booksLastYear.length} />
         <Card title="Pagine lette" value={pagesLastYear} />
-        <Card title="Nuovi autori" value={authorsLastYears.size} />
-        <Card title="Classici" value={classicsLastYear.length} />
       </div>
 
-      <BookCard
-        title="Libro più lungo dell’anno"
-        book={longestLastYear}
-      />
+      <BookCard title="Libro più lungo" book={longestLastYear} />
     </div>
   )
 }
 
-/* =========================
-   CARD KPI
-========================= */
-
+/* CARD KPI */
 function Card({ title, value }: { title: string; value: any }) {
   return (
     <div style={styles.card}>
@@ -131,16 +136,13 @@ function Card({ title, value }: { title: string; value: any }) {
   )
 }
 
-/* =========================
-   BOOK CARD (NUOVA UI)
-========================= */
-
+/* BOOK CARD STYLE PREMIUM */
 function BookCard({
   title,
   book
 }: {
   title: string
-  book?: { title: string; author: string; pages: number }
+  book?: any
 }) {
   return (
     <div style={styles.bookCard}>
@@ -159,25 +161,24 @@ function BookCard({
   )
 }
 
-/* =========================
-   STILI
-========================= */
-
+/* STILI */
 const styles: Record<string, React.CSSProperties> = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '16px'
+    gap: '14px'
   },
 
-  title: {
-    fontSize: '22px',
-    fontWeight: 700
+  header: {
+    fontSize: '20px',
+    fontWeight: 700,
+    color: '#111'
   },
 
   sectionTitle: {
-    fontSize: '15px',
+    fontSize: '16px',
     fontWeight: 600,
+    color: '#444',
     marginTop: '10px'
   },
 
@@ -189,19 +190,19 @@ const styles: Record<string, React.CSSProperties> = {
 
   card: {
     padding: '14px',
-    borderRadius: '12px',
+    borderRadius: '14px',
     border: '1px solid #eee',
     background: '#fff'
   },
 
   cardTitle: {
-    fontSize: '13px',
+    fontSize: '12px',
     color: '#777'
   },
 
   cardValue: {
-    fontSize: '16px',
-    fontWeight: 600
+    fontSize: '18px',
+    fontWeight: 700
   },
 
   bookCard: {
@@ -216,8 +217,7 @@ const styles: Record<string, React.CSSProperties> = {
 
   bookTitle: {
     fontSize: '15px',
-    fontWeight: 700,
-    color: '#111'
+    fontWeight: 700
   },
 
   bookAuthor: {
@@ -228,5 +228,17 @@ const styles: Record<string, React.CSSProperties> = {
   bookPages: {
     fontSize: '13px',
     color: '#777'
+  },
+
+  toast: {
+    position: 'fixed',
+    top: 20,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    background: '#111827',
+    color: '#fff',
+    padding: '10px 14px',
+    borderRadius: '12px',
+    fontSize: '13px'
   }
 }
