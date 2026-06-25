@@ -6,7 +6,6 @@ type Book = {
   author: string
   pages: number
   readingYear?: number
-  isClassic?: boolean
 }
 
 export default function Home() {
@@ -26,152 +25,117 @@ export default function Home() {
 
   const readBooks = books.filter((b) => b.readingYear)
 
-  const thisYearBooks = readBooks.filter(
+  const booksThisYear = readBooks.filter(
     (b) => b.readingYear === currentYear
   )
 
-  const lastYearBooks = readBooks.filter(
+  const booksLastYear = readBooks.filter(
     (b) => b.readingYear === previousYear
   )
 
-  const sumPages = (arr: Book[]) =>
-    arr.reduce((sum, b) => sum + (b.pages || 0), 0)
-
-  const thisYearPages = sumPages(thisYearBooks)
-  const lastYearPages = sumPages(lastYearBooks)
-
-  const newAuthorsThisYear = new Set(
-    thisYearBooks.map((b) => b.author)
+  const pagesThisYear = booksThisYear.reduce(
+    (sum, b) => sum + (b.pages || 0),
+    0
   )
 
-  const newAuthorsLastYear = new Set(
-    lastYearBooks.map((b) => b.author)
+  const pagesLastYear = booksLastYear.reduce(
+    (sum, b) => sum + (b.pages || 0),
+    0
   )
 
-  const longestThisYear = [...thisYearBooks].sort(
+  const authorsThisYear = new Set(
+    booksThisYear.map((b) => b.author)
+  )
+
+  const authorsLastYears = new Set(
+    readBooks
+      .filter((b) => b.readingYear && b.readingYear < currentYear)
+      .map((b) => b.author)
+  )
+
+  const newAuthorsThisYear = [...authorsThisYear].filter(
+    (a) => !authorsLastYears.has(a)
+  )
+
+  const classicsThisYear = booksThisYear.filter(
+    (b: any) => b.isClassic
+  )
+
+  /* ✅ ORA USATO IN UI */
+  const longestThisYear = [...booksThisYear].sort(
     (a, b) => (b.pages || 0) - (a.pages || 0)
   )[0]
-
-  const longestLastYear = [...lastYearBooks].sort(
-    (a, b) => (b.pages || 0) - (a.pages || 0)
-  )[0]
-
-  const classicsThisYear = thisYearBooks.filter(
-    (b) => b.isClassic
-  )
-
-  const classicsLastYear = lastYearBooks.filter(
-    (b) => b.isClassic
-  )
 
   return (
     <div style={styles.container}>
-      {/* HEADER */}
-      <div style={styles.header}>
-        <h2 style={styles.title}>🏠 Home</h2>
-        <div style={styles.yearBadge}>Anno {currentYear}</div>
-      </div>
+      <h2 style={styles.title}>🏠 Home</h2>
 
       {/* KPI ANNO CORRENTE */}
       <div style={styles.grid}>
-        <Card title="Libri letti" value={thisYearBooks.length} />
-        <Card title="Pagine lette" value={thisYearPages} />
-        <Card title="Nuovi autori" value={newAuthorsThisYear.size} />
-        <Card title="Classici" value={classicsThisYear.length} />
+        <Card title="Libri letti" value={booksThisYear.length} />
+
+        <Card title="Pagine lette" value={pagesThisYear} />
+
+        <Card
+          title="Nuovi autori"
+          value={newAuthorsThisYear.length}
+        />
+
+        <Card
+          title="Classici letti"
+          value={classicsThisYear.length}
+        />
+
         <Card
           title="Libro più lungo"
           value={
             longestThisYear
-              ? `${longestThisYear.title} (${longestThisYear.pages} pagine)`
+              ? `${longestThisYear.title} - ${longestThisYear.author} (${longestThisYear.pages})`
               : '-'
           }
         />
       </div>
 
       {/* CONFRONTO ANNO PRECEDENTE */}
-      <div style={styles.compareBox}>
-        <div style={styles.compareHeader}>
-          Confronto con {previousYear}
-        </div>
+      <h3 style={styles.subTitle}>
+        Confronto {previousYear}
+      </h3>
 
-        <div style={styles.compareGrid}>
-          <MiniCard
-            label="Libri"
-            a={thisYearBooks.length}
-            b={lastYearBooks.length}
-          />
-          <MiniCard
-            label="Pagine"
-            a={thisYearPages}
-            b={lastYearPages}
-          />
-          <MiniCard
-            label="Autori"
-            a={newAuthorsThisYear.size}
-            b={newAuthorsLastYear.size}
-          />
-          <MiniCard
-            label="Classici"
-            a={classicsThisYear.length}
-            b={classicsLastYear.length}
-          />
+      <div style={styles.grid}>
+        <Card title="Libri letti" value={booksLastYear.length} />
 
-          <div style={styles.fullRow}>
-            <div style={styles.longestLabel}>
-              Libro più lungo
-            </div>
-            <div style={styles.longestValue}>
-              {longestThisYear?.title || '-'} <span style={{ opacity: 0.4, margin: '0 6px' }}>/</span> {longestLastYear?.title || '-'}
-            </div>
-          </div>
-        </div>
+        <Card title="Pagine lette" value={pagesLastYear} />
+
+        <Card
+          title="Nuovi autori"
+          value={authorsLastYears.size}
+        />
+
+        <Card
+          title="Classici letti"
+          value={booksLastYear.filter((b: any) => b.isClassic).length}
+        />
       </div>
     </div>
   )
 }
 
-/* =========================
-   COMPONENTI
-========================= */
-
-function Card({ title, value }: any) {
+/* CARD */
+function Card({ title, value }: { title: string; value: any }) {
   return (
     <div style={styles.card}>
-      <div style={styles.cardTitle}>{title}</div>
-      <div style={styles.cardValue}>{value}</div>
+      <p style={styles.cardTitle}>{title}</p>
+      <p style={styles.cardValue}>{value}</p>
     </div>
   )
 }
 
-function MiniCard({ label, a, b }: any) {
-  return (
-    <div style={styles.miniCard}>
-      <div style={styles.miniLabel}>{label}</div>
-
-      <div style={styles.miniValue}>
-        <span>{a}</span>
-        <span style={{ opacity: 0.25, margin: '0 6px' }}>/</span>
-        <span style={{ opacity: 0.7 }}>{b}</span>
-      </div>
-    </div>
-  )
-}
-
-/* =========================
-   STILI
-========================= */
-
+/* STILI */
 const styles: Record<string, React.CSSProperties> = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '14px'
-  },
-
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center'
+    gap: '16px'
   },
 
   title: {
@@ -179,12 +143,10 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700
   },
 
-  yearBadge: {
-    fontSize: '12px',
-    padding: '4px 10px',
-    borderRadius: '999px',
-    background: '#eef2ff',
-    color: '#3730a3'
+  subTitle: {
+    fontSize: '16px',
+    fontWeight: 600,
+    marginTop: '10px'
   },
 
   grid: {
@@ -200,68 +162,12 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   cardTitle: {
-    fontSize: '12px',
+    fontSize: '13px',
     color: '#777'
   },
 
   cardValue: {
     fontSize: '18px',
     fontWeight: 600
-  },
-
-  compareBox: {
-    marginTop: '10px',
-    padding: '14px',
-    borderRadius: '12px',
-    background: '#f9fafb',
-    border: '1px solid #eee'
-  },
-
-  compareHeader: {
-    fontSize: '13px',
-    fontWeight: 600,
-    marginBottom: '10px',
-    color: '#555'
-  },
-
-  compareGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '10px'
-  },
-
-  miniCard: {
-    padding: '10px',
-    borderRadius: '10px',
-    background: '#fff',
-    border: '1px solid #eee'
-  },
-
-  miniLabel: {
-    fontSize: '11px',
-    color: '#777'
-  },
-
-  miniValue: {
-    fontSize: '14px',
-    fontWeight: 600
-  },
-
-  fullRow: {
-    gridColumn: '1 / -1',
-    padding: '10px',
-    borderRadius: '10px',
-    background: '#fff',
-    border: '1px solid #eee'
-  },
-
-  longestLabel: {
-    fontSize: '11px',
-    color: '#777'
-  },
-
-  longestValue: {
-    fontSize: '13px',
-    fontWeight: 500
   }
 }

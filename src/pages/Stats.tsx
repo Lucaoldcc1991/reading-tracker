@@ -9,6 +9,7 @@ type Book = {
   country?: string
   pages: number
   readingYear?: number
+  isClassic?: boolean
 }
 
 export default function Stats() {
@@ -28,9 +29,7 @@ export default function Stats() {
 
   const years = Array.from(
     new Set(readBooks.map((b) => b.readingYear))
-  )
-    .filter(Boolean)
-    .sort((a, b) => (b as number) - (a as number))
+  ).sort((a, b) => (b as number) - (a as number))
 
   const filteredBooks =
     yearFilter === 'all'
@@ -47,24 +46,40 @@ export default function Stats() {
   )
 
   /* =========================
+     CLASSICI
+  ========================= */
+
+  const classicsCount = filteredBooks.filter(
+    (b) => b.isClassic
+  ).length
+
+  /* =========================
+     LIBRO PIÙ LUNGO
+  ========================= */
+
+  const longestBook = [...filteredBooks].sort(
+    (a, b) => (b.pages || 0) - (a.pages || 0)
+  )[0]
+
+  /* =========================
      AUTORI
   ========================= */
 
   const authorsMap: Record<string, number> = {}
 
   filteredBooks.forEach((b) => {
-    if (!b.author) return
-    authorsMap[b.author] = (authorsMap[b.author] || 0) + 1
+    authorsMap[b.author] =
+      (authorsMap[b.author] || 0) + 1
   })
 
   const topAuthors = Object.entries(authorsMap).sort(
     (a, b) => b[1] - a[1]
   )
 
-  const maxAuthorValue =
-    topAuthors.length > 0
-      ? Math.max(...topAuthors.map((a) => a[1]))
-      : 1
+  const maxAuthorValue = Math.max(
+    ...topAuthors.map((a) => a[1]),
+    1
+  )
 
   /* =========================
      GENERI
@@ -73,8 +88,8 @@ export default function Stats() {
   const genresMap: Record<string, number> = {}
 
   filteredBooks.forEach((b) => {
-    if (!b.genre) return
-    genresMap[b.genre] = (genresMap[b.genre] || 0) + 1
+    genresMap[b.genre] =
+      (genresMap[b.genre] || 0) + 1
   })
 
   const genresList = Object.entries(genresMap).sort(
@@ -101,6 +116,7 @@ export default function Stats() {
     <div style={styles.container}>
       <h2 style={styles.title}>📊 Statistiche</h2>
 
+      {/* FILTRO ANNO */}
       <select
         value={yearFilter}
         onChange={(e) => setYearFilter(e.target.value)}
@@ -108,7 +124,7 @@ export default function Stats() {
       >
         <option value="all">Tutti gli anni</option>
         {years.map((y) => (
-          <option key={String(y)} value={String(y)}>
+          <option key={y} value={String(y)}>
             {y}
           </option>
         ))}
@@ -125,9 +141,23 @@ export default function Stats() {
           <p style={styles.kpiLabel}>Pagine</p>
           <p style={styles.kpiValue}>{totalPages}</p>
         </div>
+
+        <div style={styles.kpiCard}>
+          <p style={styles.kpiLabel}>Classici</p>
+          <p style={styles.kpiValue}>{classicsCount}</p>
+        </div>
+
+        <div style={styles.kpiCard}>
+          <p style={styles.kpiLabel}>Libro più lungo</p>
+          <p style={styles.kpiValue}>
+            {longestBook
+              ? `${longestBook.title} - ${longestBook.author} (${longestBook.pages})`
+              : '-'}
+          </p>
+        </div>
       </div>
 
-      {/* AUTORI */}
+      {/* LEADERBOARD AUTORI */}
       <div style={styles.section}>
         <h3 style={styles.sectionTitle}>🏆 Autori</h3>
 
@@ -151,7 +181,7 @@ export default function Stats() {
         ))}
       </div>
 
-      {/* PAESI */}
+      {/* NAZIONI */}
       <div style={styles.section}>
         <h3 style={styles.sectionTitle}>🌍 Paesi</h3>
 
@@ -180,9 +210,9 @@ export default function Stats() {
   )
 }
 
-/* FLAGS */
+/* FLAG */
 function getFlag(country?: string) {
-  switch ((country || '').toLowerCase()) {
+  switch (country?.toLowerCase()) {
     case 'italia':
     case 'italy':
       return '🇮🇹'
@@ -194,7 +224,6 @@ function getFlag(country?: string) {
       return '🇺🇸'
     case 'regno unito':
     case 'uk':
-    case 'inghilterra':
       return '🇬🇧'
     case 'giappone':
     case 'japan':
@@ -206,49 +235,42 @@ function getFlag(country?: string) {
 
 /* STILI */
 const styles: Record<string, React.CSSProperties> = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px'
-  },
-  title: {
-    fontSize: '22px',
-    fontWeight: 700
-  },
+  container: { display: 'flex', flexDirection: 'column', gap: '12px' },
+
+  title: { fontSize: '22px', fontWeight: 700 },
+
   select: {
     padding: '10px',
     borderRadius: '10px',
     border: '1px solid #ddd'
   },
+
   kpiGrid: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
     gap: '10px'
   },
+
   kpiCard: {
     padding: '14px',
     borderRadius: '14px',
     border: '1px solid #eee',
     background: '#fff'
   },
-  kpiLabel: {
-    fontSize: '12px',
-    color: '#777'
-  },
-  kpiValue: {
-    fontSize: '18px',
-    fontWeight: 700
-  },
+
+  kpiLabel: { fontSize: '12px', color: '#777' },
+
+  kpiValue: { fontSize: '18px', fontWeight: 700 },
+
   section: {
     display: 'flex',
     flexDirection: 'column',
     gap: '8px',
     marginTop: '10px'
   },
-  sectionTitle: {
-    fontSize: '14px',
-    fontWeight: 600
-  },
+
+  sectionTitle: { fontSize: '14px', fontWeight: 600 },
+
   row: {
     display: 'flex',
     alignItems: 'center',
@@ -256,6 +278,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '10px',
     fontSize: '13px'
   },
+
   barWrap: {
     flex: 1,
     height: '6px',
@@ -263,17 +286,20 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '999px',
     overflow: 'hidden'
   },
+
   bar: {
     height: '100%',
     background: '#6366f1',
     borderRadius: '999px'
   },
+
   badge: {
     background: '#eef2ff',
     padding: '2px 8px',
     borderRadius: '999px',
     fontSize: '12px'
   },
+
   countryRow: {
     display: 'flex',
     justifyContent: 'space-between',

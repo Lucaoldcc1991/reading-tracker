@@ -12,11 +12,8 @@ type Book = {
   publicationYear?: number
   readingMonth?: number
   readingYear?: number
+  isClassic?: boolean
 }
-
-/* =========================
-   GENERI
-========================= */
 
 const GENRES = [
   'Giallo/Noir/Legal',
@@ -26,59 +23,20 @@ const GENRES = [
   'Narrativa per ragazzi',
   'Saggio',
   'Fumetto',
-  'Storico/Autobiografico',
+  'Storico/Di formazione/Autobiografico',
   'Fantascienza',
   'Fantasy',
   'Avventura',
   'Distopico'
 ]
 
-/* =========================
-   MESI
-========================= */
-
 const MONTHS = [
-  'Gennaio',
-  'Febbraio',
-  'Marzo',
-  'Aprile',
-  'Maggio',
-  'Giugno',
-  'Luglio',
-  'Agosto',
-  'Settembre',
-  'Ottobre',
-  'Novembre',
-  'Dicembre'
+  'Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
+  'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'
 ]
 
-/* =========================
-   PAESI (semplificato ma completo UI)
-   (ISO standard + nomi leggibili)
-========================= */
-
 const COUNTRIES = [
-  'Italia',
-  'Stati Uniti',
-  'Regno Unito',
-  'Francia',
-  'Germania',
-  'Spagna',
-  'Giappone',
-  'Cina',
-  'Corea del Sud',
-  'Russia',
-  'Brasile',
-  'Canada',
-  'Australia',
-  'India',
-  'Messico',
-  'Svezia',
-  'Norvegia',
-  'Paesi Bassi',
-  'Portogallo',
-  'Grecia',
-  'Altro'
+  'Italia','Francia','Germania','Spagna','Regno Unito','USA','Giappone'
 ]
 
 export default function BookForm({
@@ -97,6 +55,7 @@ export default function BookForm({
   const [publicationYear, setPublicationYear] = useState<number | ''>('')
   const [readingMonth, setReadingMonth] = useState<number | ''>('')
   const [readingYear, setReadingYear] = useState<number | ''>('')
+  const [isClassic, setIsClassic] = useState(false)
 
   useEffect(() => {
     if (book) {
@@ -109,6 +68,7 @@ export default function BookForm({
       setPublicationYear(book.publicationYear || '')
       setReadingMonth(book.readingMonth || '')
       setReadingYear(book.readingYear || '')
+      setIsClassic(book.isClassic || false)
     }
   }, [book])
 
@@ -122,6 +82,7 @@ export default function BookForm({
       series,
       country,
       pages,
+      isClassic,
       publicationYear: publicationYear || undefined,
       readingMonth: readingMonth || undefined,
       readingYear: readingYear || undefined
@@ -146,121 +107,73 @@ export default function BookForm({
           {book ? 'Modifica libro' : 'Aggiungi libro'}
         </h3>
 
-        <input
-          style={styles.input}
-          placeholder="Titolo"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
+        <input style={styles.input} placeholder="Titolo"
+          value={title} onChange={(e) => setTitle(e.target.value)} />
 
-        <input
-          style={styles.input}
-          placeholder="Autore"
-          value={author}
-          onChange={(e) => setAuthor(e.target.value)}
-        />
+        <input style={styles.input} placeholder="Autore"
+          value={author} onChange={(e) => setAuthor(e.target.value)} />
 
-        {/* GENERE */}
-        <select
-          style={styles.input}
+        <select style={styles.input}
           value={genre}
-          onChange={(e) => setGenre(e.target.value)}
-        >
-          <option value="">Seleziona genere</option>
+          onChange={(e) => setGenre(e.target.value)}>
+          <option value="">Genere</option>
           {GENRES.map((g) => (
-            <option key={g} value={g}>
-              {g}
-            </option>
+            <option key={g} value={g}>{g}</option>
           ))}
         </select>
 
-        {/* SERIE */}
-        <input
-          style={styles.input}
-          placeholder="Serie (opzionale)"
-          value={series}
-          onChange={(e) => setSeries(e.target.value)}
-        />
+        <input style={styles.input} placeholder="Serie (opzionale)"
+          value={series} onChange={(e) => setSeries(e.target.value)} />
 
-        {/* PAESE */}
-        <select
-          style={styles.input}
+        <select style={styles.input}
           value={country}
-          onChange={(e) => setCountry(e.target.value)}
-        >
-          <option value="">Seleziona paese</option>
+          onChange={(e) => setCountry(e.target.value)}>
+          <option value="">Paese</option>
           {COUNTRIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
+            <option key={c} value={c}>{c}</option>
           ))}
         </select>
 
-        {/* PAGINE */}
-        <input
-          style={styles.input}
-          type="number"
-          placeholder="Pagine"
-          value={pages}
-          onChange={(e) => setPages(Number(e.target.value))}
-        />
+        <input style={styles.input} type="number" placeholder="Pagine"
+          value={pages} onChange={(e) => setPages(Number(e.target.value))} />
 
-        {/* ANNO PUBBLICAZIONE */}
-        <input
-          style={styles.input}
-          type="number"
-          placeholder="Anno pubblicazione"
+        <input style={styles.input} type="number" placeholder="Anno pubblicazione"
           value={publicationYear}
-          onChange={(e) =>
-            setPublicationYear(Number(e.target.value))
-          }
-        />
+          onChange={(e) => setPublicationYear(Number(e.target.value))} />
 
-        {/* MESE LETTURA */}
-        <select
-          style={styles.input}
+        <select style={styles.input}
           value={readingMonth}
-          onChange={(e) =>
-            setReadingMonth(Number(e.target.value))
-          }
-        >
+          onChange={(e) => setReadingMonth(Number(e.target.value))}>
           <option value="">Mese lettura</option>
           {MONTHS.map((m, i) => (
-            <option key={m} value={i + 1}>
-              {m}
-            </option>
+            <option key={m} value={i + 1}>{m}</option>
           ))}
         </select>
 
-        {/* ANNO LETTURA */}
-        <input
-          style={styles.input}
-          type="number"
-          placeholder="Anno lettura"
+        <input style={styles.input} type="number" placeholder="Anno lettura"
           value={readingYear}
-          onChange={(e) =>
-            setReadingYear(Number(e.target.value))
-          }
-        />
+          onChange={(e) => setReadingYear(Number(e.target.value))} />
+
+        {/* ⭐ CLASSICO */}
+        <label style={styles.checkboxRow}>
+          <input
+            type="checkbox"
+            checked={isClassic}
+            onChange={(e) => setIsClassic(e.target.checked)}
+          />
+          <span>Classico</span>
+        </label>
 
         <div style={styles.actions}>
-          <button onClick={onClose} style={styles.cancel}>
-            Annulla
-          </button>
-
-          <button onClick={save} style={styles.save}>
-            Salva
-          </button>
+          <button onClick={onClose} style={styles.cancel}>Annulla</button>
+          <button onClick={save} style={styles.save}>Salva</button>
         </div>
       </div>
     </div>
   )
 }
 
-/* =========================
-   STILI
-========================= */
-
+/* STILI */
 const styles: Record<string, React.CSSProperties> = {
   overlay: {
     position: 'fixed',
@@ -268,8 +181,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'rgba(0,0,0,0.35)',
     display: 'flex',
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: '10px'
+    alignItems: 'center'
   },
   modal: {
     background: '#fff',
@@ -281,14 +193,18 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     gap: '10px'
   },
-  title: {
-    fontSize: '16px',
-    fontWeight: 600
-  },
+  title: { fontSize: '16px', fontWeight: 600 },
   input: {
     padding: '10px',
     borderRadius: '8px',
     border: '1px solid #ddd'
+  },
+  checkboxRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '14px',
+    marginTop: '4px'
   },
   actions: {
     display: 'flex',
