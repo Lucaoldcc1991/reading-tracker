@@ -86,7 +86,7 @@ export default function Home() {
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.header}>📚 Reading Tracker</h2>
+      <h2 style={styles.header}>📚 Home</h2>
 
       {/* QUEST’ANNO */}
       <h3 style={styles.sectionTitle}>Quest’anno</h3>

@@ -77,9 +77,8 @@ export default function Stats() {
       (authorsMap[b.author] || 0) + 1
   })
 
-  const topAuthors = Object.entries(authorsMap).sort(
-    (a, b) => b[1] - a[1]
-  )
+  const topAuthors = Object.entries(authorsMap)
+    .sort((a, b) => b[1] - a[1])
 
   /* =========================
      PAESI
@@ -93,9 +92,8 @@ export default function Stats() {
       (countryMap[b.country] || 0) + 1
   })
 
-  const countries = Object.entries(countryMap).sort(
-    (a, b) => b[1] - a[1]
-  )
+  const countries = Object.entries(countryMap)
+    .sort((a, b) => b[1] - a[1])
 
   /* =========================
      GENERI
@@ -108,9 +106,8 @@ export default function Stats() {
       (genresMap[b.genre] || 0) + 1
   })
 
-  const genres = Object.entries(genresMap).sort(
-    (a, b) => b[1] - a[1]
-  )
+  const genres = Object.entries(genresMap)
+    .sort((a, b) => b[1] - a[1])
 
   return (
     <div style={styles.container}>
@@ -167,10 +164,11 @@ export default function Stats() {
       <div style={styles.section}>
         <h3 style={styles.sectionTitle}>🏆 Autori</h3>
 
-        {topAuthors.map(([author, count]) => (
+        {topAuthors.map(([author, count], i) => (
           <div key={author} style={styles.row}>
-            <span>{author}</span>
-            <span style={styles.badge}>{count}</span>
+            <span>
+              {i + 1}° {author} {count}
+            </span>
           </div>
         ))}
       </div>
@@ -181,8 +179,9 @@ export default function Stats() {
 
         {countries.map(([country, count]) => (
           <div key={country} style={styles.row}>
-            <span>{country}</span>
-            <span style={styles.badge}>{count}</span>
+            <span>
+              {country} {count}
+            </span>
           </div>
         ))}
       </div>
@@ -193,8 +192,9 @@ export default function Stats() {
 
         {genres.map(([genre, count]) => (
           <div key={genre} style={styles.row}>
-            <span>{genre}</span>
-            <span style={styles.badge}>{count}</span>
+            <span>
+              {genre} {count}
+            </span>
           </div>
         ))}
       </div>
@@ -293,12 +293,5 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     justifyContent: 'space-between',
     fontSize: '13px'
-  },
-
-  badge: {
-    background: '#eef2ff',
-    padding: '2px 8px',
-    borderRadius: '999px',
-    fontSize: '12px'
   }
 }

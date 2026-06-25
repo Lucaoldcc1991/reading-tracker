@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { db } from '../db/database'
 import BookForm from '../components/BookForm'
+import { COUNTRIES } from '../utils/countries'
 
 type Book = {
   id?: number
@@ -13,8 +14,15 @@ type Book = {
   publicationYear?: number
   readingMonth?: number
   readingYear?: number
+  classic?: boolean
   createdAt: number
 }
+
+const MONTHS = [
+  'Gennaio', 'Febbraio', 'Marzo', 'Aprile',
+  'Maggio', 'Giugno', 'Luglio', 'Agosto',
+  'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+]
 
 export default function Library() {
   const [books, setBooks] = useState<Book[]>([])
@@ -37,13 +45,10 @@ export default function Library() {
 
   const filteredBooks = books.filter((b) => {
     const q = search.toLowerCase()
-
     return (
       b.title.toLowerCase().includes(q) ||
       b.author.toLowerCase().includes(q) ||
-      b.genre.toLowerCase().includes(q) ||
-      (b.series || '').toLowerCase().includes(q) ||
-      (b.country || '').toLowerCase().includes(q)
+      b.genre.toLowerCase().includes(q)
     )
   })
 
@@ -67,25 +72,16 @@ export default function Library() {
     loadBooks()
   }
 
-  const getFlag = (country?: string) => {
-    if (!country) return ''
-    return country
-      .toUpperCase()
-      .replace(/./g, (char) =>
-        String.fromCodePoint(127397 + char.charCodeAt(0))
-      )
-  }
-
   return (
     <div style={styles.container}>
-      <h2 style={styles.header}>📚 Libreria</h2>
+      <h2 style={styles.title}>📚 Libreria</h2>
 
       <div style={styles.counter}>
         📊 {filteredBooks.length} libri
       </div>
 
       <input
-        placeholder="Cerca titolo, autore, genere, serie o paese..."
+        placeholder="Cerca libro, autore o genere..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         style={styles.search}
@@ -107,66 +103,73 @@ export default function Library() {
       )}
 
       <div style={styles.list}>
-        {filteredBooks.map((book) => (
-          <div key={book.id} style={styles.card}>
-            <div style={styles.info}>
-              <p style={styles.titleBook}>{book.title}</p>
+        {filteredBooks.map((book) => {
+          const country = COUNTRIES.find(
+            (c) => c.name === book.country
+          )
 
-              <p style={styles.meta}>
-                {book.author} · {book.genre}
-              </p>
+          return (
+            <div key={book.id} style={styles.card}>
+              <div style={styles.info}>
+                <p style={styles.titleBook}>{book.title}</p>
 
-              {book.series && (
                 <p style={styles.meta}>
-                  📚 Serie: {book.series}
+                  {book.author} · {book.genre}
                 </p>
-              )}
 
-              {book.country && (
-                <p style={styles.country}>
-                  {getFlag(book.country)} {book.country}
+                <p style={styles.meta}>
+                  {book.publicationYear
+                    ? `Pubblicazione: ${book.publicationYear} · `
+                    : ''}
+                  {book.pages} pagine
                 </p>
-              )}
 
-              <p style={styles.meta}>
-                {book.publicationYear
-                  ? `Pubblicazione: ${book.publicationYear} · `
-                  : ''}
-                {book.pages} pagine
-              </p>
+                <p style={styles.countryRow}>
+                  {country ? (
+                    <>
+                      <span>{country.flag}</span>
+                      <span>{country.name}</span>
+                    </>
+                  ) : (
+                    '—'
+                  )}
+                </p>
 
-              <p style={styles.meta}>
-                {book.readingMonth && book.readingYear
-                  ? `Letto: ${book.readingMonth}/${book.readingYear}`
-                  : 'Non letto'}
-              </p>
+                <p style={styles.meta}>
+                  {book.readingMonth && book.readingYear
+                    ? `Letto: ${MONTHS[book.readingMonth - 1]} ${book.readingYear}`
+                    : 'Non letto'}
+                </p>
+
+                {book.classic && (
+                  <p style={styles.classic}>📖 Classico</p>
+                )}
+              </div>
+
+              <div style={styles.actions}>
+                <button
+                  onClick={() => openEdit(book)}
+                  style={styles.edit}
+                >
+                  ✏️
+                </button>
+
+                <button
+                  onClick={() => deleteBook(book.id)}
+                  style={styles.delete}
+                >
+                  ✕
+                </button>
+              </div>
             </div>
-
-            <div style={styles.actions}>
-              <button
-                onClick={() => openEdit(book)}
-                style={styles.edit}
-              >
-                ✏️
-              </button>
-
-              <button
-                onClick={() => deleteBook(book.id)}
-                style={styles.delete}
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
 }
 
-/* =========================
-   STILI
-========================= */
+/* STILI */
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
@@ -175,9 +178,10 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '12px'
   },
 
-  header: {
-    fontSize: '22px',
-    fontWeight: 700
+  title: {
+    fontSize: '28px',
+    fontWeight: 700,
+    color: '#1f2937'
   },
 
   counter: {
@@ -231,14 +235,24 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#666'
   },
 
-  country: {
+  countryRow: {
     fontSize: '13px',
+    display: 'flex',
+    gap: '6px',
+    alignItems: 'center',
     color: '#444'
+  },
+
+  classic: {
+    fontSize: '12px',
+    color: '#6366f1',
+    fontWeight: 600
   },
 
   actions: {
     display: 'flex',
-    gap: '8px'
+    gap: '8px',
+    alignItems: 'start'
   },
 
   edit: {
