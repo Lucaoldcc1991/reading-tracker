@@ -27,7 +27,6 @@ const MONTHS = [
 export default function Library() {
   const [books, setBooks] = useState<Book[]>([])
   const [search, setSearch] = useState('')
-
   const [editingBook, setEditingBook] = useState<Book | null>(null)
   const [showForm, setShowForm] = useState(false)
 
@@ -114,7 +113,6 @@ export default function Library() {
             <div key={book.id} style={styles.card}>
               <div style={styles.info}>
 
-                {/* TITOLO + NUMERO INTEGRATO (APP STYLE) */}
                 <p style={styles.titleBook}>
                   <span style={styles.indexInline}>
                     #{index + 1}
@@ -122,23 +120,12 @@ export default function Library() {
                   {book.title}
                 </p>
 
+                {/* AUTORE + GENERE */}
                 <p style={styles.meta}>
                   {book.author} · {book.genre}
                 </p>
 
-                {book.series && (
-                  <p style={styles.meta}>
-                    📚 Serie: {book.series}
-                  </p>
-                )}
-
-                <p style={styles.meta}>
-                  {book.publicationYear
-                    ? `Pubblicazione: ${book.publicationYear} · `
-                    : ''}
-                  {book.pages} pagine
-                </p>
-
+                {/* PAESE SUBITO SOTTO */}
                 <p style={styles.countryRow}>
                   {country ? (
                     <>
@@ -150,6 +137,22 @@ export default function Library() {
                   )}
                 </p>
 
+                {/* SERIE */}
+                {book.series && (
+                  <p style={styles.meta}>
+                    📚 Serie: {book.series}
+                  </p>
+                )}
+
+                {/* PUBBLICAZIONE + PAGINE */}
+                <p style={styles.meta}>
+                  {book.publicationYear
+                    ? `Pubblicazione: ${book.publicationYear} · `
+                    : ''}
+                  {book.pages} pagine
+                </p>
+
+                {/* LETTURA */}
                 <p style={styles.meta}>
                   {book.readingMonth && book.readingYear
                     ? `Letto: ${MONTHS[book.readingMonth - 1]} ${book.readingYear}`

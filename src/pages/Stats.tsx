@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { db } from '../db/database'
+import { COUNTRIES } from '../utils/countries'
 
 type Book = {
   title: string
@@ -154,14 +155,19 @@ export default function Stats() {
       <div style={styles.section}>
         <h3 style={styles.sectionTitle}>🌍 Paesi</h3>
 
-        {countries.map(([country, count]) => (
-          <div key={country} style={styles.row}>
-            <span>
-              {country}
-              <span style={styles.pill}>{count}</span>
-            </span>
-          </div>
-        ))}
+        {countries.map(([country, count]) => {
+          const c = COUNTRIES.find(x => x.name === country)
+
+          return (
+            <div key={country} style={styles.row}>
+              <span>
+                {c?.flag && <span style={styles.flag}>{c.flag}</span>}
+                {country}
+                <span style={styles.pill}>{count}</span>
+              </span>
+            </div>
+          )
+        })}
       </div>
 
       <div style={styles.section}>
@@ -286,5 +292,9 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     marginRight: '6px',
     color: '#111'
+  },
+
+  flag: {
+    marginRight: '6px'
   }
 }
