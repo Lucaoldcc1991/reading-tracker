@@ -48,7 +48,8 @@ export default function Library() {
     return (
       b.title.toLowerCase().includes(q) ||
       b.author.toLowerCase().includes(q) ||
-      b.genre.toLowerCase().includes(q)
+      b.genre.toLowerCase().includes(q) ||
+      b.series?.toLowerCase().includes(q)   // ✅ FIX AGGIUNTO
     )
   })
 

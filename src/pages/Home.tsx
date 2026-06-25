@@ -44,12 +44,16 @@ export default function Home() {
     0
   )
 
+  /* =========================
+     FIX CLASSICI (ROBUSTO)
+  ========================= */
+
   const classicsThisYear = booksThisYear.filter(
-    (b) => b.classic
+    (b) => b.classic === true
   )
 
   const classicsLastYear = booksLastYear.filter(
-    (b) => b.classic
+    (b) => b.classic === true
   )
 
   const authorsThisYear = new Set(
@@ -72,9 +76,9 @@ export default function Home() {
       .map((b) => b.author)
   )
 
-  const newAuthorsLastYear = [...new Set(
-    booksLastYear.map((b) => b.author)
-  )].filter((a) => !authorsBeforeLastYear.has(a)).length
+  const newAuthorsLastYear = [
+    ...new Set(booksLastYear.map((b) => b.author))
+  ].filter((a) => !authorsBeforeLastYear.has(a)).length
 
   const longestThisYear = [...booksThisYear].sort(
     (a, b) => (b.pages || 0) - (a.pages || 0)

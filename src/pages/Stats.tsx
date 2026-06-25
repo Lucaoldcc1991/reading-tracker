@@ -38,10 +38,6 @@ export default function Stats() {
           (b) => String(b.readingYear) === yearFilter
         )
 
-  /* =========================
-     KPI BASE
-  ========================= */
-
   const totalBooks = filteredBooks.length
 
   const totalPages = filteredBooks.reduce(
@@ -55,20 +51,12 @@ export default function Stats() {
 
   const totalClassics = classicBooks.length
 
-  /* =========================
-     LIBRO PIÙ LUNGO
-  ========================= */
-
   const longestBook =
     filteredBooks.length > 0
       ? [...filteredBooks].sort(
           (a, b) => (b.pages || 0) - (a.pages || 0)
         )[0]
       : null
-
-  /* =========================
-     AUTORI
-  ========================= */
 
   const authorsMap: Record<string, number> = {}
 
@@ -80,10 +68,6 @@ export default function Stats() {
   const topAuthors = Object.entries(authorsMap)
     .sort((a, b) => b[1] - a[1])
 
-  /* =========================
-     PAESI
-  ========================= */
-
   const countryMap: Record<string, number> = {}
 
   filteredBooks.forEach((b) => {
@@ -94,10 +78,6 @@ export default function Stats() {
 
   const countries = Object.entries(countryMap)
     .sort((a, b) => b[1] - a[1])
-
-  /* =========================
-     GENERI
-  ========================= */
 
   const genresMap: Record<string, number> = {}
 
@@ -113,7 +93,6 @@ export default function Stats() {
     <div style={styles.container}>
       <h2 style={styles.title}>📊 Statistiche</h2>
 
-      {/* FILTRO ANNO */}
       <select
         value={yearFilter}
         onChange={(e) => setYearFilter(e.target.value)}
@@ -127,7 +106,6 @@ export default function Stats() {
         ))}
       </select>
 
-      {/* KPI */}
       <div style={styles.kpiRow}>
         <div style={styles.kpiItem}>
           <p style={styles.kpiLabel}>Libri</p>
@@ -145,7 +123,6 @@ export default function Stats() {
         </div>
       </div>
 
-      {/* LIBRO PIÙ LUNGO */}
       <div style={styles.bookCard}>
         <p style={styles.cardTitle}>Libro più lungo</p>
 
@@ -160,40 +137,41 @@ export default function Stats() {
         )}
       </div>
 
-      {/* AUTORI */}
       <div style={styles.section}>
         <h3 style={styles.sectionTitle}>🏆 Autori</h3>
 
         {topAuthors.map(([author, count], i) => (
           <div key={author} style={styles.row}>
             <span>
-              {i + 1}° {author} {count}
+              {author}
+              <span style={styles.badge}>#{i + 1}</span>
+              <span style={styles.pill}>{count}</span>
             </span>
           </div>
         ))}
       </div>
 
-      {/* PAESI */}
       <div style={styles.section}>
         <h3 style={styles.sectionTitle}>🌍 Paesi</h3>
 
         {countries.map(([country, count]) => (
           <div key={country} style={styles.row}>
             <span>
-              {country} {count}
+              {country}
+              <span style={styles.pill}>{count}</span>
             </span>
           </div>
         ))}
       </div>
 
-      {/* GENERI */}
       <div style={styles.section}>
         <h3 style={styles.sectionTitle}>📚 Generi</h3>
 
         {genres.map(([genre, count]) => (
           <div key={genre} style={styles.row}>
             <span>
-              {genre} {count}
+              {genre}
+              <span style={styles.pill}>{count}</span>
             </span>
           </div>
         ))}
@@ -291,7 +269,22 @@ const styles: Record<string, React.CSSProperties> = {
 
   row: {
     display: 'flex',
-    justifyContent: 'space-between',
     fontSize: '13px'
+  },
+
+  pill: {
+    marginLeft: '8px',
+    padding: '2px 8px',
+    borderRadius: '999px',
+    background: '#eef2ff',
+    color: '#4f46e5',
+    fontSize: '11px',
+    fontWeight: 600
+  },
+
+  badge: {
+    marginLeft: '6px',
+    fontSize: '11px',
+    color: '#888'
   }
 }
