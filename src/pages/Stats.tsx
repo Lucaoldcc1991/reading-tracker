@@ -5,6 +5,8 @@ type Book = {
   title: string
   author: string
   genre: string
+  series?: string
+  country?: string
   pages: number
   readingYear?: number
 }
@@ -42,6 +44,10 @@ export default function Stats() {
     0
   )
 
+  /* =========================
+     AUTORI (LEADERBOARD)
+  ========================= */
+
   const authorsMap: Record<string, number> = {}
 
   filteredBooks.forEach((b) => {
@@ -51,7 +57,15 @@ export default function Stats() {
 
   const topAuthors = Object.entries(authorsMap)
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 10)
+
+  const maxAuthorValue = Math.max(
+    ...topAuthors.map((a) => a[1]),
+    1
+  )
+
+  /* =========================
+     GENERI
+  ========================= */
 
   const genresMap: Record<string, number> = {}
 
@@ -64,22 +78,25 @@ export default function Stats() {
     (a, b) => b[1] - a[1]
   )
 
+  /* =========================
+     NAZIONI
+  ========================= */
+
+  const countryMap: Record<string, number> = {}
+
+  filteredBooks.forEach((b) => {
+    if (!b.country) return
+    countryMap[b.country] =
+      (countryMap[b.country] || 0) + 1
+  })
+
+  const countries = Object.entries(countryMap).sort(
+    (a, b) => b[1] - a[1]
+  )
+
   return (
     <div style={styles.container}>
-      <h2
-  style={{
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    marginBottom: "20px",
-    fontSize: "28px",
-    fontWeight: 700,
-    color: "#1f2937",
-  }}
->
-  <span style={{ fontSize: "30px" }}>📊</span>
-  <span>Statistiche</span>
-</h2>
+      <h2 style={styles.title}>📊 Statistiche</h2>
 
       {/* FILTRO ANNO */}
       <select
@@ -95,46 +112,94 @@ export default function Stats() {
         ))}
       </select>
 
-      {/* TOTALI */}
-      <div style={styles.card}>
-        <p style={styles.label}>Totale libri letti</p>
-        <p style={styles.value}>{totalBooks}</p>
+      {/* KPI */}
+      <div style={styles.kpiGrid}>
+        <div style={styles.kpiCard}>
+          <p style={styles.kpiLabel}>Libri</p>
+          <p style={styles.kpiValue}>{totalBooks}</p>
+        </div>
+
+        <div style={styles.kpiCard}>
+          <p style={styles.kpiLabel}>Pagine</p>
+          <p style={styles.kpiValue}>{totalPages}</p>
+        </div>
       </div>
 
-      <div style={styles.card}>
-        <p style={styles.label}>Totale pagine lette</p>
-        <p style={styles.value}>{totalPages}</p>
-      </div>
-
-      {/* TOP AUTORI */}
+      {/* LEADERBOARD AUTORI */}
       <div style={styles.section}>
-        <h3 style={styles.sectionTitle}>Top 10 autori</h3>
+        <h3 style={styles.sectionTitle}>🏆 Autori</h3>
 
-        {topAuthors.map(([author, count], index) => (
+        {topAuthors.map(([author, count], i) => (
           <div key={author} style={styles.row}>
-            <span style={styles.leftText}>
-              {index + 1}° {author}
-              <span style={styles.inlineBadge}>{count}</span>
+            <span>
+              {i + 1}. {author}
             </span>
+
+            <div style={styles.barWrap}>
+              <div
+                style={{
+                  ...styles.bar,
+                  width: `${(count / maxAuthorValue) * 100}%`
+                }}
+              />
+            </div>
+
+            <span style={styles.badge}>{count}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* NAZIONI */}
+      <div style={styles.section}>
+        <h3 style={styles.sectionTitle}>🌍 Paesi</h3>
+
+        {countries.map(([country, count]) => (
+          <div key={country} style={styles.countryRow}>
+            <span>
+              {getFlag(country)} {country}
+            </span>
+            <span style={styles.badge}>{count}</span>
           </div>
         ))}
       </div>
 
       {/* GENERI */}
       <div style={styles.section}>
-        <h3 style={styles.sectionTitle}>Generi</h3>
+        <h3 style={styles.sectionTitle}>📚 Generi</h3>
 
         {genresList.map(([genre, count]) => (
-          <div key={genre} style={styles.row}>
-            <span style={styles.leftText}>
-              {genre}
-              <span style={styles.inlineBadge}>{count}</span>
-            </span>
+          <div key={genre} style={styles.countryRow}>
+            <span>{genre}</span>
+            <span style={styles.badge}>{count}</span>
           </div>
         ))}
       </div>
     </div>
   )
+}
+
+/* FLAG SIMPLE MAP (estendibile) */
+function getFlag(country?: string) {
+  switch (country?.toLowerCase()) {
+    case 'italia':
+    case 'italy':
+      return '🇮🇹'
+    case 'francia':
+    case 'france':
+      return '🇫🇷'
+    case 'usa':
+    case 'stati uniti':
+      return '🇺🇸'
+    case 'regno unito':
+    case 'uk':
+    case 'inghilterra':
+      return '🇬🇧'
+    case 'giappone':
+    case 'japan':
+      return '🇯🇵'
+    default:
+      return '📍'
+  }
 }
 
 /* STILI */
@@ -145,58 +210,85 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     gap: '12px'
   },
+
   title: {
-    fontSize: '20px',
-    fontWeight: 600
+    fontSize: '22px',
+    fontWeight: 700
   },
+
   select: {
     padding: '10px',
     borderRadius: '10px',
     border: '1px solid #ddd'
   },
-  card: {
-    padding: '12px',
-    borderRadius: '12px',
+
+  kpiGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '10px'
+  },
+
+  kpiCard: {
+    padding: '14px',
+    borderRadius: '14px',
     border: '1px solid #eee',
     background: '#fff'
   },
-  label: {
-    fontSize: '13px',
+
+  kpiLabel: {
+    fontSize: '12px',
     color: '#777'
   },
-  value: {
+
+  kpiValue: {
     fontSize: '18px',
-    fontWeight: 600
+    fontWeight: 700
   },
+
   section: {
-    marginTop: '10px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '6px'
+    gap: '8px',
+    marginTop: '10px'
   },
+
   sectionTitle: {
-    fontSize: '15px',
-    fontWeight: 600,
-    marginBottom: '4px'
+    fontSize: '14px',
+    fontWeight: 600
   },
+
   row: {
     display: 'flex',
     alignItems: 'center',
-    padding: '6px 0',
-    borderBottom: '1px solid #f2f2f2',
-    fontSize: '14px'
+    justifyContent: 'space-between',
+    gap: '10px',
+    fontSize: '13px'
   },
-  leftText: {
-    textAlign: 'left',
-    flex: 1
-  },
-  inlineBadge: {
-    marginLeft: '6px',
-    padding: '2px 7px',
+
+  barWrap: {
+    flex: 1,
+    height: '6px',
+    background: '#eee',
     borderRadius: '999px',
+    overflow: 'hidden'
+  },
+
+  bar: {
+    height: '100%',
+    background: '#6366f1',
+    borderRadius: '999px'
+  },
+
+  badge: {
     background: '#eef2ff',
-    color: '#3730a3',
-    fontSize: '12px',
-    fontWeight: 600
+    padding: '2px 8px',
+    borderRadius: '999px',
+    fontSize: '12px'
+  },
+
+  countryRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    fontSize: '13px'
   }
 }

@@ -7,41 +7,12 @@ type Book = {
   author: string
   genre: string
   series?: string
+  country?: string
   pages: number
   publicationYear?: number
   readingMonth?: number
   readingYear?: number
 }
-
-const GENRES = [
-  'Giallo/Noir/Legal',
-  'Thriller',
-  'Horror/Gotico/Paranormale',
-  'Realista/Psicologico/Filosofico',
-  'Narrativa per ragazzi',
-  'Saggio',
-  'Fumetto',
-  'Storico/Di formazione/Autobiografico',
-  'Fantascienza',
-  'Fantasy',
-  'Avventura',
-  'Distopico'
-]
-
-const MONTHS = [
-  'Gennaio',
-  'Febbraio',
-  'Marzo',
-  'Aprile',
-  'Maggio',
-  'Giugno',
-  'Luglio',
-  'Agosto',
-  'Settembre',
-  'Ottobre',
-  'Novembre',
-  'Dicembre'
-]
 
 export default function BookForm({
   book,
@@ -54,6 +25,7 @@ export default function BookForm({
   const [author, setAuthor] = useState('')
   const [genre, setGenre] = useState('')
   const [series, setSeries] = useState('')
+  const [country, setCountry] = useState('')
   const [pages, setPages] = useState<number>(0)
   const [publicationYear, setPublicationYear] = useState<number | ''>('')
   const [readingMonth, setReadingMonth] = useState<number | ''>('')
@@ -65,6 +37,7 @@ export default function BookForm({
       setAuthor(book.author)
       setGenre(book.genre)
       setSeries(book.series || '')
+      setCountry(book.country || '')
       setPages(book.pages || 0)
       setPublicationYear(book.publicationYear || '')
       setReadingMonth(book.readingMonth || '')
@@ -80,6 +53,7 @@ export default function BookForm({
       author,
       genre,
       series,
+      country,
       pages,
       publicationYear: publicationYear || undefined,
       readingMonth: readingMonth || undefined,
@@ -105,102 +79,44 @@ export default function BookForm({
           {book ? 'Modifica libro' : 'Aggiungi libro'}
         </h3>
 
-        <input
-          placeholder="Titolo"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          style={styles.input}
-        />
+        <input style={styles.input} placeholder="Titolo" value={title}
+          onChange={(e) => setTitle(e.target.value)} />
 
-        <input
-          placeholder="Autore"
-          value={author}
-          onChange={(e) => setAuthor(e.target.value)}
-          style={styles.input}
-        />
+        <input style={styles.input} placeholder="Autore" value={author}
+          onChange={(e) => setAuthor(e.target.value)} />
 
-        {/* GENERE */}
-        <select
-          value={genre}
-          onChange={(e) => setGenre(e.target.value)}
-          style={styles.input}
-        >
-          <option value="">Seleziona genere</option>
-          {GENRES.map((g) => (
-            <option key={g} value={g}>
-              {g}
-            </option>
-          ))}
-        </select>
+        <input style={styles.input} placeholder="Genere" value={genre}
+          onChange={(e) => setGenre(e.target.value)} />
 
-        <input
-          placeholder="Serie (opzionale)"
-          value={series}
-          onChange={(e) => setSeries(e.target.value)}
-          style={styles.input}
-        />
+        <input style={styles.input} placeholder="Serie (opzionale)" value={series}
+          onChange={(e) => setSeries(e.target.value)} />
 
-        <input
-          type="number"
-          placeholder="Anno pubblicazione"
+        <input style={styles.input} placeholder="Paese (opzionale)" value={country}
+          onChange={(e) => setCountry(e.target.value)} />
+
+        <input style={styles.input} type="number" placeholder="Pagine"
+          value={pages} onChange={(e) => setPages(Number(e.target.value))} />
+
+        <input style={styles.input} type="number" placeholder="Anno pubblicazione"
           value={publicationYear}
-          onChange={(e) =>
-            setPublicationYear(Number(e.target.value))
-          }
-          style={styles.input}
-        />
+          onChange={(e) => setPublicationYear(Number(e.target.value))} />
 
-        {/* PAGINE (senza frecce visibili via CSS) */}
-        <input
-          type="number"
-          placeholder="Pagine"
-          value={pages}
-          onChange={(e) => setPages(Number(e.target.value))}
-          style={styles.input}
-        />
-
-        {/* MESE */}
-        <select
+        <input style={styles.input} type="number" placeholder="Mese lettura"
           value={readingMonth}
-          onChange={(e) =>
-            setReadingMonth(Number(e.target.value))
-          }
-          style={styles.input}
-        >
-          <option value="">Mese di lettura</option>
-          {MONTHS.map((m, i) => (
-            <option key={m} value={i + 1}>
-              {m}
-            </option>
-          ))}
-        </select>
+          onChange={(e) => setReadingMonth(Number(e.target.value))} />
 
-        {/* ANNO LETTURA */}
-        <input
-          type="number"
-          placeholder="Anno di lettura"
+        <input style={styles.input} type="number" placeholder="Anno lettura"
           value={readingYear}
-          onChange={(e) =>
-            setReadingYear(Number(e.target.value))
-          }
-          style={styles.input}
-        />
+          onChange={(e) => setReadingYear(Number(e.target.value))} />
 
         <div style={styles.actions}>
-          <button onClick={onClose} style={styles.cancel}>
-            Annulla
-          </button>
-
-          <button onClick={save} style={styles.save}>
-            Salva
-          </button>
+          <button onClick={onClose} style={styles.cancel}>Annulla</button>
+          <button onClick={save} style={styles.save}>Salva</button>
         </div>
       </div>
     </div>
   )
 }
-
-/* STILI */
 
 const styles: Record<string, React.CSSProperties> = {
   overlay: {
@@ -209,29 +125,23 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'rgba(0,0,0,0.35)',
     display: 'flex',
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: '10px'
+    alignItems: 'center'
   },
   modal: {
+    background: '#fff',
+    padding: '16px',
+    borderRadius: '12px',
     width: '100%',
     maxWidth: '380px',
-    background: '#fff',
-    borderRadius: '14px',
-    padding: '16px',
     display: 'flex',
     flexDirection: 'column',
     gap: '10px'
   },
-  title: {
-    fontSize: '16px',
-    fontWeight: 600
-  },
+  title: { fontSize: '16px', fontWeight: 600 },
   input: {
     padding: '10px',
-    borderRadius: '10px',
-    border: '1px solid #ddd',
-    outline: 'none',
-    fontSize: '14px'
+    borderRadius: '8px',
+    border: '1px solid #ddd'
   },
   actions: {
     display: 'flex',
@@ -239,16 +149,15 @@ const styles: Record<string, React.CSSProperties> = {
     marginTop: '10px'
   },
   cancel: {
+    padding: '8px 12px',
     background: '#f3f3f3',
     border: 'none',
-    padding: '8px 12px',
     borderRadius: '8px'
   },
   save: {
+    padding: '8px 12px',
     background: '#e8edff',
     border: 'none',
-    padding: '8px 12px',
-    borderRadius: '8px',
-    fontWeight: 500
+    borderRadius: '8px'
   }
 }

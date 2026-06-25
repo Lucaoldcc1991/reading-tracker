@@ -3,9 +3,49 @@
   padding: 0;
   box-sizing: border-box;
   font-family: system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   background-color: #ffffff;
   color: #111;
+  line-height: 1.4;
+}
+
+/* link base coerente con app */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* pulsanti base (fallback se dimentichi style inline) */
+button {
+  font-family: inherit;
+}
+
+/* input base coerente su iPhone */
+input, select, textarea {
+  font-family: inherit;
+  font-size: 14px;
+}
+
+/* rimozione outline brutto su mobile ma mantenendo accessibilità */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+}
+
+/* miglior rendering su mobile */
+html, body {
+  height: 100%;
+  width: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* scroll più pulito su iOS */
+body {
+  -webkit-overflow-scrolling: touch;
 }

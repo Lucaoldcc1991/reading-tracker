@@ -6,6 +6,7 @@ type Book = {
   author: string
   pages: number
   readingYear?: number
+  isClassic?: boolean
 }
 
 export default function Home() {
@@ -44,45 +45,8 @@ export default function Home() {
     0
   )
 
-  /* =========================
-     NOTIFICHE LOGIC
-  ========================= */
-
-  useEffect(() => {
-    const booksKey = 'rt_books_notified'
-    const pagesKey = 'rt_pages_notified'
-
-    const booksNotified = localStorage.getItem(booksKey)
-    const pagesNotified = localStorage.getItem(pagesKey)
-
-    if (booksThisYear.length > booksLastYear.length && !booksNotified) {
-      setToast('🎉 Hai superato i libri dell’anno scorso!')
-
-      localStorage.setItem(booksKey, 'true')
-
-      setTimeout(() => setToast(null), 3000)
-    }
-
-    if (pagesThisYear > pagesLastYear && !pagesNotified) {
-      setTimeout(() => {
-        setToast('📚 Hai superato le pagine dell’anno scorso!')
-
-        localStorage.setItem(pagesKey, 'true')
-
-        setTimeout(() => setToast(null), 3000)
-      }, 3500)
-    }
-  }, [booksThisYear.length, pagesThisYear, pagesLastYear])
-
-  /* =========================
-     HOME KPI (STEP 3 RESTA)
-     (non modificati qui per non rompere release)
-  ========================= */
-
-  const readBooksThisYear = booksThisYear
-
   const authorsThisYear = new Set(
-    readBooksThisYear.map((b) => b.author)
+    booksThisYear.map((b) => b.author)
   )
 
   const authorsPreviousYears = new Set(
@@ -95,70 +59,120 @@ export default function Home() {
     (a) => !authorsPreviousYears.has(a)
   )
 
-  const longestThisYear = [...readBooksThisYear].sort(
+  const classicThisYear = booksThisYear.filter(
+    (b) => b.isClassic
+  )
+
+  const longestThisYear = [...booksThisYear].sort(
     (a, b) => (b.pages || 0) - (a.pages || 0)
   )[0]
 
+  /* TOAST LOGIC */
+  useEffect(() => {
+    const booksKey = 'rt_books_notified'
+    const pagesKey = 'rt_pages_notified'
+
+    const booksNotified = localStorage.getItem(booksKey)
+    const pagesNotified = localStorage.getItem(pagesKey)
+
+    if (booksThisYear.length > booksLastYear.length && !booksNotified) {
+      setToast('🎉 Libri superati rispetto all’anno scorso')
+      localStorage.setItem(booksKey, 'true')
+      setTimeout(() => setToast(null), 3000)
+    }
+
+    if (pagesThisYear > pagesLastYear && !pagesNotified) {
+      setTimeout(() => {
+        setToast('📚 Pagine superate rispetto all’anno scorso')
+        localStorage.setItem(pagesKey, 'true')
+        setTimeout(() => setToast(null), 3000)
+      }, 3000)
+    }
+  }, [booksThisYear.length, pagesThisYear, pagesLastYear])
+
   return (
     <div style={styles.container}>
-      <h2
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          marginBottom: "20px",
-          fontSize: "28px",
-          fontWeight: 700,
-          color: "#1f2937",
-        }}
-      >
-        <span style={{ fontSize: "30px" }}>🏠</span>
-        <span>Home</span>
-      </h2>
+      <h2 style={styles.title}>🏠 Home</h2>
 
-      {/* TOAST */}
-      {toast && (
-        <div style={styles.toast}>
-          {toast}
-        </div>
-      )}
+      {toast && <div style={styles.toast}>{toast}</div>}
 
+      {/* KPI PRIMARY */}
       <div style={styles.grid}>
-        <Card
-          title="Libri letti quest'anno"
-          value={booksThisYear.length}
-        />
+        <Card label="Libri anno" value={booksThisYear.length} icon="📚" />
+        <Card label="Pagine anno" value={pagesThisYear} icon="📄" />
+        <Card label="Nuovi autori" value={newAuthorsThisYear.length} icon="👤" />
+        <Card label="Classici" value={classicThisYear.length} icon="🏛️" />
+      </div>
 
-        <Card
-          title="Pagine lette quest'anno"
-          value={pagesThisYear}
-        />
+      {/* FEATURE BOOK */}
+      <div style={styles.featureCard}>
+        <p style={styles.sectionLabel}>Libro più lungo dell’anno</p>
 
-        <Card
-          title="Nuovi autori scoperti"
-          value={newAuthorsThisYear.length}
-        />
+        {longestThisYear ? (
+          <>
+            <p style={styles.featureTitle}>
+              {longestThisYear.title}
+            </p>
 
-        <Card
-          title="Libro più lungo dell'anno"
-          value={
-            longestThisYear
-              ? `${longestThisYear.title} - ${longestThisYear.author} (${longestThisYear.pages} pagine)`
-              : '-'
-          }
-        />
+            <p style={styles.featureSub}>
+              {longestThisYear.author}
+            </p>
+
+            <p style={styles.featureMeta}>
+              {longestThisYear.pages} pagine
+            </p>
+          </>
+        ) : (
+          <p style={styles.featureMeta}>-</p>
+        )}
+      </div>
+
+      {/* COMPARISON */}
+      <div style={styles.compare}>
+        <p style={styles.sectionLabel}>Confronto anno precedente</p>
+
+        <Row icon="📚" label="Libri" value={`${booksThisYear.length} vs ${booksLastYear.length}`} />
+        <Row icon="📄" label="Pagine" value={`${pagesThisYear} vs ${pagesLastYear}`} />
+        <Row icon="👤" label="Autori nuovi" value={newAuthorsThisYear.length} />
+        <Row icon="🏛️" label="Classici" value={classicThisYear.length} />
       </div>
     </div>
   )
 }
 
-/* COMPONENTE CARD */
+/* COMPONENTI */
 
-function Card({ title, value }: { title: string; value: any }) {
+function Card({
+  label,
+  value,
+  icon
+}: {
+  label: string
+  value: any
+  icon: string
+}) {
   return (
     <div style={styles.card}>
-      <p style={styles.cardTitle}>{title}</p>
+      <div style={styles.icon}>{icon}</div>
+      <p style={styles.cardLabel}>{label}</p>
       <p style={styles.cardValue}>{value}</p>
+    </div>
+  )
+}
+
+function Row({
+  icon,
+  label,
+  value
+}: {
+  icon: string
+  label: string
+  value: any
+}) {
+  return (
+    <div style={styles.row}>
+      <span>{icon} {label}</span>
+      <span>{value}</span>
     </div>
   )
 }
@@ -169,29 +183,85 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '16px'
+    gap: '14px'
+  },
+
+  title: {
+    fontSize: '22px',
+    fontWeight: 700
   },
 
   grid: {
     display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
     gap: '10px'
   },
 
   card: {
     padding: '14px',
-    borderRadius: '12px',
+    borderRadius: '16px',
     border: '1px solid #eee',
     background: '#fff'
   },
 
-  cardTitle: {
-    fontSize: '13px',
+  icon: {
+    fontSize: '18px',
+    marginBottom: '6px'
+  },
+
+  cardLabel: {
+    fontSize: '12px',
     color: '#777'
   },
 
   cardValue: {
     fontSize: '18px',
-    fontWeight: 600
+    fontWeight: 700
+  },
+
+  featureCard: {
+    padding: '16px',
+    borderRadius: '16px',
+    background: '#f9fafb',
+    border: '1px solid #eee'
+  },
+
+  sectionLabel: {
+    fontSize: '12px',
+    color: '#777',
+    marginBottom: '6px'
+  },
+
+  featureTitle: {
+    fontSize: '16px',
+    fontWeight: 700
+  },
+
+  featureSub: {
+    fontSize: '14px',
+    color: '#444'
+  },
+
+  featureMeta: {
+    fontSize: '12px',
+    color: '#888'
+  },
+
+  compare: {
+    padding: '14px',
+    borderRadius: '16px',
+    border: '1px solid #eee',
+    background: '#fff',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px'
+  },
+
+  row: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    fontSize: '13px',
+    color: '#444'
   },
 
   toast: {
@@ -201,10 +271,9 @@ const styles: Record<string, React.CSSProperties> = {
     transform: 'translateX(-50%)',
     background: '#111827',
     color: '#fff',
-    padding: '12px 16px',
+    padding: '10px 14px',
     borderRadius: '12px',
-    fontSize: '14px',
-    zIndex: 9999,
-    boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
+    fontSize: '13px',
+    zIndex: 9999
   }
 }

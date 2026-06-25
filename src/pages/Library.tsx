@@ -7,6 +7,8 @@ type Book = {
   title: string
   author: string
   genre: string
+  series?: string
+  isClassic?: boolean
   pages: number
   publicationYear?: number
   readingMonth?: number
@@ -33,13 +35,18 @@ export default function Library() {
     setBooks(data)
   }
 
+  /* =========================
+     SEARCH (AGGIORNATA)
+  ========================= */
+
   const filteredBooks = books.filter((b) => {
     const q = search.toLowerCase()
 
     return (
       b.title.toLowerCase().includes(q) ||
       b.author.toLowerCase().includes(q) ||
-      b.genre.toLowerCase().includes(q)
+      b.genre.toLowerCase().includes(q) ||
+      (b.series ? b.series.toLowerCase().includes(q) : false)
     )
   })
 
@@ -86,7 +93,7 @@ export default function Library() {
       </div>
 
       <input
-        placeholder="Cerca per titolo, autore o genere..."
+        placeholder="Cerca per titolo, autore, genere o serie..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         style={styles.search}
@@ -116,6 +123,13 @@ export default function Library() {
               <p style={styles.meta}>
                 {book.author} · {book.genre}
               </p>
+
+              {/* SERIE (NUOVO) */}
+              {book.series && (
+                <p style={styles.series}>
+                  📚 {book.series}
+                </p>
+              )}
 
               <p style={styles.meta}>
                 {book.publicationYear
@@ -202,6 +216,11 @@ const styles: Record<string, React.CSSProperties> = {
   meta: {
     fontSize: '13px',
     color: '#666'
+  },
+  series: {
+    fontSize: '12px',
+    color: '#888',
+    marginTop: 2
   },
   actions: {
     display: 'flex',
