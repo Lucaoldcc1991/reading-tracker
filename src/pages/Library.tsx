@@ -27,6 +27,7 @@ const MONTHS = [
 export default function Library() {
   const [books, setBooks] = useState<Book[]>([])
   const [search, setSearch] = useState('')
+
   const [editingBook, setEditingBook] = useState<Book | null>(null)
   const [showForm, setShowForm] = useState(false)
 
@@ -49,7 +50,7 @@ export default function Library() {
       b.title.toLowerCase().includes(q) ||
       b.author.toLowerCase().includes(q) ||
       b.genre.toLowerCase().includes(q) ||
-      b.series?.toLowerCase().includes(q)   // ✅ FIX AGGIUNTO
+      (b.series || '').toLowerCase().includes(q)
     )
   })
 
@@ -82,7 +83,7 @@ export default function Library() {
       </div>
 
       <input
-        placeholder="Cerca libro, autore o genere..."
+        placeholder="Cerca libro, autore, genere o serie..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         style={styles.search}
@@ -104,7 +105,7 @@ export default function Library() {
       )}
 
       <div style={styles.list}>
-        {filteredBooks.map((book) => {
+        {filteredBooks.map((book, index) => {
           const country = COUNTRIES.find(
             (c) => c.name === book.country
           )
@@ -112,11 +113,24 @@ export default function Library() {
           return (
             <div key={book.id} style={styles.card}>
               <div style={styles.info}>
-                <p style={styles.titleBook}>{book.title}</p>
+
+                {/* TITOLO + NUMERO INTEGRATO (APP STYLE) */}
+                <p style={styles.titleBook}>
+                  <span style={styles.indexInline}>
+                    #{index + 1}
+                  </span>{' '}
+                  {book.title}
+                </p>
 
                 <p style={styles.meta}>
                   {book.author} · {book.genre}
                 </p>
+
+                {book.series && (
+                  <p style={styles.meta}>
+                    📚 Serie: {book.series}
+                  </p>
+                )}
 
                 <p style={styles.meta}>
                   {book.publicationYear
@@ -228,7 +242,19 @@ const styles: Record<string, React.CSSProperties> = {
 
   titleBook: {
     fontWeight: 600,
-    fontSize: '15px'
+    fontSize: '15px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px'
+  },
+
+  indexInline: {
+    fontSize: '11px',
+    fontWeight: 700,
+    color: '#4f46e5',
+    background: '#eef2ff',
+    padding: '2px 6px',
+    borderRadius: '999px'
   },
 
   meta: {

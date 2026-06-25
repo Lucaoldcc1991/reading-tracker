@@ -143,8 +143,8 @@ export default function Stats() {
         {topAuthors.map(([author, count], i) => (
           <div key={author} style={styles.row}>
             <span>
+              <span style={styles.rank}>{i + 1}°</span>{' '}
               {author}
-              <span style={styles.badge}>#{i + 1}</span>
               <span style={styles.pill}>{count}</span>
             </span>
           </div>
@@ -282,9 +282,9 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600
   },
 
-  badge: {
-    marginLeft: '6px',
-    fontSize: '11px',
-    color: '#888'
+  rank: {
+    fontWeight: 700,
+    marginRight: '6px',
+    color: '#111'
   }
 }

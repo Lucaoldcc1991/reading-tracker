@@ -7,6 +7,7 @@ type Book = {
   pages: number
   readingYear?: number
   classic?: boolean
+  isClassic?: boolean
 }
 
 export default function Home() {
@@ -44,17 +45,12 @@ export default function Home() {
     0
   )
 
-  /* =========================
-     FIX CLASSICI (ROBUSTO)
-  ========================= */
+  /* FIX UNICO REALE: normalizzazione campo classici */
+  const isClassic = (b: Book) =>
+    b.classic === true || (b as any).isClassic === true
 
-  const classicsThisYear = booksThisYear.filter(
-    (b) => b.classic === true
-  )
-
-  const classicsLastYear = booksLastYear.filter(
-    (b) => b.classic === true
-  )
+  const classicsThisYear = booksThisYear.filter(isClassic)
+  const classicsLastYear = booksLastYear.filter(isClassic)
 
   const authorsThisYear = new Set(
     booksThisYear.map((b) => b.author)
@@ -92,7 +88,6 @@ export default function Home() {
     <div style={styles.container}>
       <h2 style={styles.header}>📚 Home</h2>
 
-      {/* QUEST’ANNO */}
       <h3 style={styles.sectionTitle}>Quest’anno</h3>
 
       <div style={styles.grid}>
@@ -104,7 +99,6 @@ export default function Home() {
 
       <BookCard title="Libro più lungo" book={longestThisYear} />
 
-      {/* CONFRONTO */}
       <h3 style={styles.sectionTitle}>
         Confronto con {previousYear}
       </h3>
