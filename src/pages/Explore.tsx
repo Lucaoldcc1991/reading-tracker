@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { db } from '../db/database'
 
 type Book = {
@@ -49,7 +49,19 @@ export default function Explore() {
     setBooks(data)
   }
 
-  const genres = [...new Set(books.map(b => b.genre))]
+  /* =========================
+     GENRES ORDINATI PER NUMERO LIBRI
+  ========================= */
+  const genreCountsMap = useMemo(() => {
+    return books.reduce((acc: Record<string, number>, b) => {
+      acc[b.genre] = (acc[b.genre] || 0) + 1
+      return acc
+    }, {})
+  }, [books])
+
+  const genres = Object.entries(genreCountsMap)
+    .sort((a, b) => b[1] - a[1]) // più libri → sopra
+    .map(([genre]) => genre)
 
   const genreCounts = (genre: string) =>
     books.filter(b => b.genre === genre).length
@@ -213,19 +225,16 @@ const styles: Record<string, React.CSSProperties> = {
     width: 'fit-content'
   },
 
-  /* STACK VERTICALE */
   stack: {
     display: 'flex',
     flexDirection: 'column',
     gap: '10px'
   },
 
-  /* CARD RIGA (APP STYLE) */
   rowCard: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-
     padding: '14px',
     borderRadius: '14px',
     border: '1px solid rgba(229,231,235,0.8)',
