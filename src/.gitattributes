@@ -1,0 +1,17 @@
+# Forza LF nel repository (standard cross-platform)
+* text=auto eol=lf
+
+# File di testo principali
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.md text eol=lf
+
+# Config e tooling
+*.yml text eol=lf
+*.yaml text eol=lf
+*.env text eol=lf

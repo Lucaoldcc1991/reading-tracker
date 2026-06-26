@@ -19,9 +19,9 @@ type Book = {
 }
 
 const MONTHS = [
-  'Gennaio', 'Febbraio', 'Marzo', 'Aprile',
-  'Maggio', 'Giugno', 'Luglio', 'Agosto',
-  'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+  'Gennaio','Febbraio','Marzo','Aprile',
+  'Maggio','Giugno','Luglio','Agosto',
+  'Settembre','Ottobre','Novembre','Dicembre'
 ]
 
 export default function Library() {
@@ -65,9 +65,7 @@ export default function Library() {
 
   const deleteBook = async (id?: number) => {
     if (!id) return
-
-    const confirmDelete = confirm('Eliminare questo libro?')
-    if (!confirmDelete) return
+    if (!confirm('Eliminare questo libro?')) return
 
     await db.books.delete(id)
     loadBooks()
@@ -92,93 +90,86 @@ export default function Library() {
         + Aggiungi libro
       </button>
 
+      {/* ================= MODAL FORM ================= */}
       {showForm && (
-        <BookForm
-          book={editingBook}
-          onClose={() => {
-            setShowForm(false)
-            setEditingBook(null)
-            loadBooks()
-          }}
-        />
+        <div style={styles.modalOverlay}>
+          <BookForm
+            book={editingBook}
+            onClose={() => {
+              setShowForm(false)
+              setEditingBook(null)
+              loadBooks()
+            }}
+          />
+        </div>
       )}
 
       <div style={styles.list}>
-        {filteredBooks.map((book, index) => {
+        {filteredBooks.map((book) => {
           const country = COUNTRIES.find(
             (c) => c.name === book.country
           )
 
+          const monthName =
+            book.readingMonth &&
+            book.readingMonth >= 1 &&
+            book.readingMonth <= 12
+              ? MONTHS[book.readingMonth - 1]
+              : ''
+
           return (
-            <div key={book.id} style={styles.card}>
+            <div
+              key={book.id ?? `${book.title}-${book.createdAt}`}
+              style={styles.card}
+            >
+
+              {/* LEFT */}
               <div style={styles.info}>
+                <p style={styles.titleBook}>{book.title}</p>
 
-                <p style={styles.titleBook}>
-                  <span style={styles.indexInline}>
-                    #{index + 1}
-                  </span>{' '}
-                  {book.title}
-                </p>
-
-                {/* AUTORE + GENERE */}
                 <p style={styles.meta}>
                   {book.author} · {book.genre}
                 </p>
 
-                {/* PAESE SUBITO SOTTO */}
                 <p style={styles.countryRow}>
-                  {country ? (
-                    <>
-                      <span>{country.flag}</span>
-                      <span>{country.name}</span>
-                    </>
-                  ) : (
-                    '—'
+                  {country?.flag} {country?.name}
+                  {book.publicationYear && (
+                    <span style={styles.meta}>
+                      {' '} - {book.publicationYear}
+                    </span>
                   )}
                 </p>
 
-                {/* SERIE */}
                 {book.series && (
-                  <p style={styles.meta}>
-                    📚 Serie: {book.series}
+                  <p style={styles.series}>
+                    {book.series}
                   </p>
                 )}
 
-                {/* PUBBLICAZIONE + PAGINE */}
                 <p style={styles.meta}>
-                  {book.publicationYear
-                    ? `Pubblicazione: ${book.publicationYear} · `
-                    : ''}
                   {book.pages} pagine
                 </p>
 
-                {/* LETTURA */}
-                <p style={styles.meta}>
-                  {book.readingMonth && book.readingYear
-                    ? `Letto: ${MONTHS[book.readingMonth - 1]} ${book.readingYear}`
-                    : 'Non letto'}
+                <p style={styles.reading}>
+                  {monthName && book.readingYear
+                    ? `${monthName} ${book.readingYear}`
+                    : ''}
                 </p>
-
-                {book.classic && (
-                  <p style={styles.classic}>📖 Classico</p>
-                )}
               </div>
 
+              {/* ACTIONS */}
               <div style={styles.actions}>
-                <button
-                  onClick={() => openEdit(book)}
-                  style={styles.edit}
-                >
-                  ✏️
-                </button>
-
-                <button
-                  onClick={() => deleteBook(book.id)}
-                  style={styles.delete}
-                >
-                  ✕
-                </button>
+                <button onClick={() => openEdit(book)} style={styles.edit}>✏️</button>
+                <button onClick={() => deleteBook(book.id)} style={styles.delete}>🗑</button>
               </div>
+
+              {/* CLASSICO BADGE */}
+              {book.classic === true && (
+                <div style={styles.classicBadge}>
+                  🏛 Classico
+                </div>
+              )}
+
             </div>
           )
         })}
@@ -187,7 +178,9 @@ export default function Library() {
   )
 }
 
-/* STILI */
+/* =========================
+   STILI COMPLETI 3D
+========================= */
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
@@ -197,29 +190,37 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   title: {
-    fontSize: '28px',
-    fontWeight: 700,
-    color: '#1f2937'
-  },
+  fontSize: '20px',
+  fontWeight: 700,
+  color: '#111827'
+},
 
   counter: {
     fontSize: '13px',
     color: '#666'
   },
 
+  /* 3D INPUT SEARCH */
   search: {
-    padding: '10px',
-    borderRadius: '10px',
-    border: '1px solid #ddd'
+    padding: '10px 12px',
+    borderRadius: '12px',
+    border: '1px solid rgba(229,231,235,0.9)',
+    background: 'linear-gradient(145deg, #ffffff, #f9fafb)',
+    boxShadow: '0 4px 10px rgba(0,0,0,0.04)',
+    outline: 'none',
+    transition: 'all 0.2s ease'
   },
 
+  /* 3D BUTTON */
   add: {
     padding: '10px',
-    borderRadius: '10px',
-    border: 'none',
-    background: '#eef2ff',
+    borderRadius: '12px',
+    border: '1px solid rgba(229,231,235,0.8)',
+    background: 'linear-gradient(145deg, #eef2ff, #e0e7ff)',
     cursor: 'pointer',
-    fontWeight: 500
+    fontWeight: 600,
+    boxShadow: '0 6px 12px rgba(0,0,0,0.06)',
+    transition: 'all 0.2s ease'
   },
 
   list: {
@@ -228,78 +229,109 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '10px'
   },
 
+  /* 3D CARD */
   card: {
     display: 'flex',
     justifyContent: 'space-between',
+    alignItems: 'center',
     padding: '14px',
-    border: '1px solid #eee',
-    borderRadius: '12px',
-    background: '#fff'
+    borderRadius: '16px',
+    border: '1px solid rgba(229,231,235,0.8)',
+    background: 'linear-gradient(145deg, #ffffff, #f9fafb)',
+    position: 'relative',
+    boxShadow:
+      '0 6px 15px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.08)',
+    transition: 'all 0.25s ease'
   },
 
   info: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '4px'
+    gap: '4px',
+    flex: 1
   },
 
   titleBook: {
-    fontWeight: 600,
     fontSize: '15px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px'
-  },
-
-  indexInline: {
-    fontSize: '11px',
     fontWeight: 700,
-    color: '#4f46e5',
-    background: '#eef2ff',
-    padding: '2px 6px',
-    borderRadius: '999px'
+    color: '#111'
   },
 
   meta: {
     fontSize: '13px',
-    color: '#666'
+    color: '#555'
   },
 
   countryRow: {
     fontSize: '13px',
+    color: '#444',
     display: 'flex',
     gap: '6px',
-    alignItems: 'center',
-    color: '#444'
+    alignItems: 'center'
   },
 
-  classic: {
-    fontSize: '12px',
-    color: '#6366f1',
+  series: {
+    fontSize: '13px',
+    fontStyle: 'italic',
+    color: '#6b7280'
+  },
+
+  reading: {
+    alignSelf: 'flex-start',
+    marginTop: '4px',
+    padding: '2px 8px',
+    borderRadius: '999px',
+    background: '#ecfdf5',
+    color: '#16a34a',
+    fontSize: '11px',
+    fontWeight: 600
+  },
+
+  classicBadge: {
+    position: 'absolute',
+    right: '14px',
+    bottom: '10px',
+    fontSize: '11px',
+    color: '#6b7280',
     fontWeight: 600
   },
 
   actions: {
     display: 'flex',
+    flexDirection: 'row',
     gap: '8px',
-    alignItems: 'start'
+    marginLeft: '12px'
   },
 
   edit: {
-    background: '#f3f3ff',
-    border: 'none',
-    padding: '8px 10px',
-    borderRadius: '8px',
+    width: '36px',
+    height: '36px',
+    borderRadius: '10px',
+    border: '1px solid #ddd',
+    background: '#f3f4f6',
     cursor: 'pointer'
   },
 
   delete: {
+    width: '36px',
+    height: '36px',
+    borderRadius: '10px',
+    border: '1px solid #fca5a5',
     background: '#fee2e2',
-    border: 'none',
-    padding: '8px 10px',
-    borderRadius: '8px',
-    cursor: 'pointer',
     color: '#991b1b',
-    fontWeight: 700
+    cursor: 'pointer'
+  },
+
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100vw',
+    height: '100vh',
+    background: 'rgba(0,0,0,0.4)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999
   }
 }

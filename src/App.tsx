@@ -7,6 +7,7 @@ import Library from './pages/Library'
 import Wishlist from './pages/Wishlist'
 import Stats from './pages/Stats'
 import Settings from './pages/Settings'
+import Explore from './pages/Explore'
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true)
@@ -42,6 +43,9 @@ export default function App() {
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/stats" element={<Stats />} />
             <Route path="/settings" element={<Settings />} />
+
+            {/* 🔍 NUOVA PAGINA */}
+            <Route path="/explore" element={<Explore />} />
           </Routes>
         </div>
       </div>
@@ -84,10 +88,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     letterSpacing: '0.5px'
   },
-
-  /* =========================
-     APP LAYOUT (NUOVO)
-  ========================= */
 
   app: {
     minHeight: '100vh',

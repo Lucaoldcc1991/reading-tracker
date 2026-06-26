@@ -9,6 +9,7 @@ export default function Navbar() {
     <nav style={styles.nav}>
       <NavItem to="/" label="Home" active={isActive('/')} />
       <NavItem to="/library" label="Libreria" active={isActive('/library')} />
+      <NavItem to="/explore" label="Esplora" active={isActive('/explore')} />
       <NavItem to="/wishlist" label="Wishlist" active={isActive('/wishlist')} />
       <NavItem to="/stats" label="Stats" active={isActive('/stats')} />
       <NavItem to="/settings" label="Settings" active={isActive('/settings')} />
@@ -44,6 +45,7 @@ const styles: Record<string, React.CSSProperties> = {
     top: 0,
     zIndex: 10
   },
+
   link: {
     textDecoration: 'none',
     color: '#777',
@@ -53,6 +55,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '8px',
     transition: 'all 0.2s ease'
   },
+
   active: {
     color: '#1e66ff',
     background: '#eef4ff'

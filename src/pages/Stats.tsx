@@ -35,9 +35,7 @@ export default function Stats() {
   const filteredBooks =
     yearFilter === 'all'
       ? readBooks
-      : readBooks.filter(
-          (b) => String(b.readingYear) === yearFilter
-        )
+      : readBooks.filter((b) => String(b.readingYear) === yearFilter)
 
   const totalBooks = filteredBooks.length
 
@@ -50,8 +48,6 @@ export default function Stats() {
     (b) => b.isClassic === true
   )
 
-  const totalClassics = classicBooks.length
-
   const longestBook =
     filteredBooks.length > 0
       ? [...filteredBooks].sort(
@@ -59,40 +55,31 @@ export default function Stats() {
         )[0]
       : null
 
-  const authorsMap: Record<string, number> = {}
+  const mapCount = (key: keyof Book) => {
+    const map: Record<string, number> = {}
+    filteredBooks.forEach((b: any) => {
+      if (!b[key]) return
+      map[b[key]] = (map[b[key]] || 0) + 1
+    })
+    return Object.entries(map).sort((a, b) => b[1] - a[1])
+  }
 
-  filteredBooks.forEach((b) => {
-    authorsMap[b.author] =
-      (authorsMap[b.author] || 0) + 1
-  })
-
-  const topAuthors = Object.entries(authorsMap)
-    .sort((a, b) => b[1] - a[1])
+  const topAuthors = mapCount('author')
+  const topGenres = mapCount('genre')
 
   const countryMap: Record<string, number> = {}
-
   filteredBooks.forEach((b) => {
     if (!b.country) return
-    countryMap[b.country] =
-      (countryMap[b.country] || 0) + 1
+    countryMap[b.country] = (countryMap[b.country] || 0) + 1
   })
 
-  const countries = Object.entries(countryMap)
-    .sort((a, b) => b[1] - a[1])
-
-  const genresMap: Record<string, number> = {}
-
-  filteredBooks.forEach((b) => {
-    genresMap[b.genre] =
-      (genresMap[b.genre] || 0) + 1
-  })
-
-  const genres = Object.entries(genresMap)
-    .sort((a, b) => b[1] - a[1])
+  const countries = Object.entries(countryMap).sort(
+    (a, b) => b[1] - a[1]
+  )
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>📊 Statistiche</h2>
+      <h2 style={styles.header}>📊 Statistiche</h2>
 
       <select
         value={yearFilter}
@@ -107,75 +94,72 @@ export default function Stats() {
         ))}
       </select>
 
+      {/* ================= KPI 3 COLONNE PERFETTE ================= */}
       <div style={styles.kpiRow}>
-        <div style={styles.kpiItem}>
+        <div style={styles.card3d}>
           <p style={styles.kpiLabel}>Libri</p>
           <p style={styles.kpiValue}>{totalBooks}</p>
         </div>
 
-        <div style={styles.kpiItem}>
+        <div style={styles.card3d}>
           <p style={styles.kpiLabel}>Pagine</p>
           <p style={styles.kpiValue}>{totalPages}</p>
         </div>
 
-        <div style={styles.kpiItem}>
+        <div style={styles.card3d}>
           <p style={styles.kpiLabel}>Classici</p>
-          <p style={styles.kpiValue}>{totalClassics}</p>
+          <p style={styles.kpiValue}>{classicBooks.length}</p>
         </div>
       </div>
 
-      <div style={styles.bookCard}>
-        <p style={styles.cardTitle}>Libro più lungo</p>
+      {/* libro più lungo */}
+      <div style={styles.card3d}>
+        <p style={styles.kpiLabel}>Libro più lungo</p>
 
         {longestBook ? (
           <>
             <p style={styles.bookTitle}>{longestBook.title}</p>
-            <p style={styles.bookAuthor}>{longestBook.author}</p>
-            <p style={styles.bookPages}>{longestBook.pages} pagine</p>
+            <p style={styles.bookMeta}>{longestBook.author}</p>
+            <p style={styles.bookMeta}>{longestBook.pages} pagine</p>
           </>
         ) : (
           <p style={styles.kpiValue}>-</p>
         )}
       </div>
 
-      <div style={styles.section}>
+      {/* INSIGHT */}
+      <div style={styles.insightCard}>
         <h3 style={styles.sectionTitle}>🏆 Autori</h3>
 
-        {topAuthors.map(([author, count], i) => (
+        {topAuthors.slice(0, 10).map(([author, count], i) => (
           <div key={author} style={styles.row}>
-            <span>
-              <span style={styles.rank}>{i + 1}°</span>{' '}
-              {author}
+            <span style={styles.inlineRow}>
+              {i + 1}° {author}
               <span style={styles.pill}>{count}</span>
             </span>
           </div>
         ))}
-      </div>
 
-      <div style={styles.section}>
         <h3 style={styles.sectionTitle}>🌍 Paesi</h3>
 
-        {countries.map(([country, count]) => {
+        {countries.slice(0, 10).map(([country, count]) => {
           const c = COUNTRIES.find(x => x.name === country)
 
           return (
             <div key={country} style={styles.row}>
-              <span>
-                {c?.flag && <span style={styles.flag}>{c.flag}</span>}
-                {country}
+              <span style={styles.inlineRow}>
+                {c?.flag} {country}
                 <span style={styles.pill}>{count}</span>
               </span>
             </div>
           )
         })}
-      </div>
 
-      <div style={styles.section}>
         <h3 style={styles.sectionTitle}>📚 Generi</h3>
 
-        {genres.map(([genre, count]) => (
+        {topGenres.slice(0, 10).map(([genre, count]) => (
           <div key={genre} style={styles.row}>
-            <span>
+            <span style={styles.inlineRow}>
               {genre}
               <span style={styles.pill}>{count}</span>
             </span>
@@ -186,9 +170,7 @@ export default function Stats() {
   )
 }
 
-/* =========================
-   STILI
-========================= */
+/* ================= STILI ================= */
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
@@ -197,28 +179,34 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '12px'
   },
 
-  title: {
-    fontSize: '22px',
-    fontWeight: 700
+  header: {
+    fontSize: '28px',
+    fontWeight: 800
   },
 
   select: {
     padding: '10px',
-    borderRadius: '10px',
+    borderRadius: '12px',
     border: '1px solid #ddd'
   },
 
+  /* 🔥 ORA PERFETTAMENTE SIMMETRICO */
   kpiRow: {
-    display: 'flex',
-    gap: '10px'
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '12px'
   },
 
-  kpiItem: {
-    flex: 1,
-    padding: '12px',
-    borderRadius: '12px',
-    border: '1px solid #eee',
-    background: '#fff'
+  card3d: {
+    padding: '14px',
+    borderRadius: '16px',
+    background: 'linear-gradient(145deg, #ffffff, #f9fafb)',
+    border: '1px solid #e5e7eb',
+    boxShadow: '0 6px 18px rgba(0,0,0,0.06)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    minHeight: '90px'
   },
 
   kpiLabel: {
@@ -231,70 +219,50 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700
   },
 
-  bookCard: {
-    padding: '14px',
-    borderRadius: '14px',
-    border: '1px solid #e5e7eb',
-    background: '#f9fafb',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px'
-  },
-
-  cardTitle: {
-    fontSize: '13px',
-    color: '#777'
-  },
-
   bookTitle: {
     fontSize: '15px',
     fontWeight: 700
   },
 
-  bookAuthor: {
+  bookMeta: {
     fontSize: '13px',
     color: '#555'
   },
 
-  bookPages: {
-    fontSize: '13px',
-    color: '#777'
-  },
-
-  section: {
-    marginTop: '10px',
+  insightCard: {
+    padding: '14px',
+    borderRadius: '16px',
+    background: 'linear-gradient(145deg, #ffffff, #f3f4f6)',
+    border: '1px solid #e5e7eb',
+    boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
     display: 'flex',
     flexDirection: 'column',
-    gap: '6px'
+    gap: '10px'
   },
 
   sectionTitle: {
     fontSize: '14px',
-    fontWeight: 600
+    fontWeight: 700,
+    marginTop: '8px'
   },
 
   row: {
-    display: 'flex',
-    fontSize: '13px'
+    fontSize: '13px',
+    fontWeight: 500
+  },
+
+  inlineRow: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px'
   },
 
   pill: {
-    marginLeft: '8px',
     padding: '2px 8px',
     borderRadius: '999px',
     background: '#eef2ff',
     color: '#4f46e5',
     fontSize: '11px',
     fontWeight: 600
-  },
-
-  rank: {
-    fontWeight: 700,
-    marginRight: '6px',
-    color: '#111'
-  },
-
-  flag: {
-    marginRight: '6px'
   }
 }

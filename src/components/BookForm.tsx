@@ -14,7 +14,7 @@ type Book = {
   readingMonth?: number
   readingYear?: number
   createdAt?: number
-  isClassic?: boolean
+  classic?: boolean
 }
 
 const GENRES = [
@@ -53,7 +53,7 @@ export default function BookForm({
   const [publicationYear, setPublicationYear] = useState<number | ''>('')
   const [readingMonth, setReadingMonth] = useState<number | ''>('')
   const [readingYear, setReadingYear] = useState<number | ''>('')
-  const [isClassic, setIsClassic] = useState(false)
+  const [classic, setClassic] = useState(false)
 
   useEffect(() => {
     if (book) {
@@ -66,7 +66,7 @@ export default function BookForm({
       setPublicationYear(book.publicationYear || '')
       setReadingMonth(book.readingMonth || '')
       setReadingYear(book.readingYear || '')
-      setIsClassic(book.isClassic || false)
+      setClassic(book.classic || false)
     }
   }, [book])
 
@@ -83,7 +83,7 @@ export default function BookForm({
       publicationYear: publicationYear || undefined,
       readingMonth: readingMonth || undefined,
       readingYear: readingYear || undefined,
-      isClassic
+      classic
     }
 
     if (book?.id) {
@@ -99,88 +99,131 @@ export default function BookForm({
   }
 
   return (
-    <div style={styles.overlay}>
-      <div style={styles.modal}>
-        <h3 style={styles.title}>
-          {book ? 'Modifica libro' : 'Aggiungi libro'}
-        </h3>
+    <>
+      {/* 👇 CSS globale per rimuovere frecce number input */}
+      <style>{`
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
 
-        <input style={styles.input} placeholder="Titolo" value={title}
-          onChange={(e) => setTitle(e.target.value)} />
+        input[type=number] {
+          -moz-appearance: textfield;
+        }
+      `}</style>
 
-        <input style={styles.input} placeholder="Autore" value={author}
-          onChange={(e) => setAuthor(e.target.value)} />
+      <div style={styles.overlay}>
+        <div style={styles.modal}>
+          <h3 style={styles.title}>
+            {book ? 'Modifica libro' : 'Aggiungi libro'}
+          </h3>
 
-        <select style={styles.input} value={genre}
-          onChange={(e) => setGenre(e.target.value)}>
-          <option value="">Genere</option>
-          {GENRES.map(g => (
-            <option key={g} value={g}>{g}</option>
-          ))}
-        </select>
+          <input style={styles.input} placeholder="Titolo"
+            value={title} onChange={(e) => setTitle(e.target.value)} />
 
-        <input style={styles.input} placeholder="Serie (opzionale)"
-          value={series} onChange={(e) => setSeries(e.target.value)} />
+          <input style={styles.input} placeholder="Autore"
+            value={author} onChange={(e) => setAuthor(e.target.value)} />
 
-        {/* COUNTRY DROPDOWN */}
-        <select
-          style={styles.input}
-          value={country}
-          onChange={(e) => setCountry(e.target.value)}
-        >
-          <option value="">Paese</option>
-          {COUNTRIES.map(c => (
-            <option key={c.code} value={c.name}>
-              {c.flag} {c.name}
-            </option>
-          ))}
-        </select>
+          <select style={styles.input} value={genre}
+            onChange={(e) => setGenre(e.target.value)}>
+            <option value="">Genere</option>
+            {GENRES.map(g => (
+              <option key={g} value={g}>{g}</option>
+            ))}
+          </select>
 
-        <input style={styles.input} type="number" placeholder="Pagine"
-          value={pages} onChange={(e) => setPages(Number(e.target.value))} />
+          <input style={styles.input} placeholder="Serie (opzionale)"
+            value={series} onChange={(e) => setSeries(e.target.value)} />
 
-        <input style={styles.input} type="number" placeholder="Anno pubblicazione"
-          value={publicationYear}
-          onChange={(e) => setPublicationYear(Number(e.target.value))} />
+          <select
+            style={styles.input}
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+          >
+            <option value="">Paese</option>
+            {COUNTRIES.map(c => (
+              <option key={c.code} value={c.name}>
+                {c.flag} {c.name}
+              </option>
+            ))}
+          </select>
 
-        {/* MONTH DROPDOWN */}
-        <select
-          style={styles.input}
-          value={readingMonth}
-          onChange={(e) => setReadingMonth(Number(e.target.value))}
-        >
-          <option value="">Mese lettura</option>
-          {MONTHS.map((m, i) => (
-            <option key={m} value={i + 1}>{m}</option>
-          ))}
-        </select>
-
-        <input style={styles.input} type="number" placeholder="Anno lettura"
-          value={readingYear}
-          onChange={(e) => setReadingYear(Number(e.target.value))} />
-
-        {/* CLASSICO */}
-        <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {/* ❗ NO FRECCETTE */}
           <input
-            type="checkbox"
-            checked={isClassic}
-            onChange={(e) => setIsClassic(e.target.checked)}
+            style={styles.input}
+            type="number"
+            placeholder="Pagine"
+            value={pages}
+            onChange={(e) => setPages(Number(e.target.value))}
           />
-          Classico
-        </label>
 
-        <div style={styles.actions}>
-          <button onClick={onClose} style={styles.cancel}>Annulla</button>
-          <button onClick={save} style={styles.save}>Salva</button>
+          <input
+            style={styles.input}
+            type="number"
+            placeholder="Anno pubblicazione"
+            value={publicationYear}
+            onChange={(e) => setPublicationYear(Number(e.target.value))}
+          />
+
+          <select
+            style={styles.input}
+            value={readingMonth}
+            onChange={(e) => setReadingMonth(Number(e.target.value))}
+          >
+            <option value="">Mese lettura</option>
+            {MONTHS.map((m, i) => (
+              <option key={m} value={i + 1}>{m}</option>
+            ))}
+          </select>
+
+          {/* ❗ NO FRECCETTE */}
+          <input
+            style={styles.input}
+            type="number"
+            placeholder="Anno lettura"
+            value={readingYear}
+            onChange={(e) => setReadingYear(Number(e.target.value))}
+          />
+
+          <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input
+              type="checkbox"
+              checked={classic}
+              onChange={(e) => setClassic(e.target.checked)}
+            />
+            🏛 Classico
+          </label>
+
+          <div style={styles.actions}>
+            <button onClick={onClose} style={styles.cancel}>Annulla</button>
+            <button onClick={save} style={styles.save}>Salva</button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', justifyContent: 'center', alignItems: 'center' },
-  modal: { background: '#fff', padding: '16px', borderRadius: '12px', width: '100%', maxWidth: '380px', display: 'flex', flexDirection: 'column', gap: '10px' },
+  overlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(0,0,0,0.35)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  modal: {
+    background: '#fff',
+    padding: '16px',
+    borderRadius: '12px',
+    width: '100%',
+    maxWidth: '380px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px'
+  },
   title: { fontSize: '16px', fontWeight: 600 },
   input: { padding: '10px', borderRadius: '8px', border: '1px solid #ddd' },
   actions: { display: 'flex', justifyContent: 'space-between', marginTop: '10px' },

@@ -77,19 +77,8 @@ export default function Wishlist() {
 
   return (
     <div style={styles.container}>
-      <h2
-  style={{
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    marginBottom: "20px",
-    fontSize: "28px",
-    fontWeight: 700,
-    color: "#1f2937",
-  }}
->
-  <span style={{ fontSize: "30px" }}>⭐</span>
-  <span>Wishlist</span>
+      <h2 style={styles.header}>
+  ⭐ Wishlist
 </h2>
 
       <p style={styles.counter}>
@@ -112,7 +101,6 @@ export default function Wishlist() {
           style={styles.input}
         />
 
-        {/* GENERE SELECT */}
         <select
           value={genre}
           onChange={(e) => setGenre(e.target.value)}
@@ -120,9 +108,7 @@ export default function Wishlist() {
         >
           <option value="">Seleziona genere</option>
           {genres.map((g) => (
-            <option key={g} value={g}>
-              {g}
-            </option>
+            <option key={g} value={g}>{g}</option>
           ))}
         </select>
 
@@ -143,6 +129,7 @@ export default function Wishlist() {
       <div style={styles.list}>
         {filtered.map((item) => (
           <div key={item.id} style={styles.card}>
+
             <div style={styles.info}>
               <p style={styles.titleBook}>{item.title}</p>
               <p style={styles.meta}>
@@ -156,6 +143,7 @@ export default function Wishlist() {
             >
               ✕
             </button>
+
           </div>
         ))}
       </div>
@@ -163,77 +151,108 @@ export default function Wishlist() {
   )
 }
 
-/* STILI */
+/* =========================
+   STILE 3D UNIFICATO
+========================= */
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '10px'
+    gap: '12px'
   },
-  title: {
-    fontSize: '20px',
-    fontWeight: 600
-  },
+
+  header: {
+  fontSize: '20px',
+  fontWeight: 700,
+  color: '#111827',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '10px'
+},
+
   counter: {
     fontSize: '13px',
-    color: '#666'
+    color: '#6b7280'
   },
+
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '8px',
-    padding: '10px',
-    border: '1px solid #eee',
-    borderRadius: '12px',
-    background: '#fff'
+    gap: '10px',
+    padding: '12px',
+    borderRadius: '14px',
+    background: '#fff',
+    border: '1px solid #e5e7eb',
+    boxShadow: '0 6px 18px rgba(0,0,0,0.06)'
   },
+
   input: {
-    padding: '8px',
-    borderRadius: '8px',
-    border: '1px solid #ddd'
+    padding: '10px',
+    borderRadius: '10px',
+    border: '1px solid #e5e7eb',
+    background: '#fff',
+    boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.04)'
   },
+
   add: {
-    padding: '8px',
-    borderRadius: '8px',
+    padding: '10px',
+    borderRadius: '10px',
     border: 'none',
     background: '#eef2ff',
-    fontWeight: 500
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: '0 4px 10px rgba(99,102,241,0.15)'
   },
+
   search: {
-    padding: '8px',
-    borderRadius: '8px',
-    border: '1px solid #ddd'
+    padding: '10px',
+    borderRadius: '10px',
+    border: '1px solid #e5e7eb',
+    boxShadow: '0 3px 10px rgba(0,0,0,0.05)'
   },
+
   list: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '8px'
+    gap: '10px'
   },
+
   card: {
     display: 'flex',
     justifyContent: 'space-between',
-    padding: '12px',
-    border: '1px solid #eee',
-    borderRadius: '10px',
-    background: '#fff'
+    padding: '14px',
+    borderRadius: '14px',
+    border: '1px solid #e5e7eb',
+    background: '#fff',
+
+    /* 3D EFFECT */
+    boxShadow: '0 6px 14px rgba(0,0,0,0.08)',
+    transform: 'translateY(0px)',
+    transition: 'all 0.2s ease'
   },
+
   info: {
     display: 'flex',
     flexDirection: 'column'
   },
+
   titleBook: {
-    fontWeight: 600,
-    fontSize: '14px'
+    fontWeight: 700,
+    fontSize: '15px',
+    color: '#111'
   },
+
   meta: {
     fontSize: '12px',
-    color: '#666'
+    color: '#6b7280'
   },
+
   delete: {
     border: 'none',
     background: 'transparent',
     fontSize: '16px',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    color: '#ef4444'
   }
 }

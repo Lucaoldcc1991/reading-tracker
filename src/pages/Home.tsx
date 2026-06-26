@@ -45,7 +45,6 @@ export default function Home() {
     0
   )
 
-  /* FIX UNICO REALE: normalizzazione campo classici */
   const isClassic = (b: Book) =>
     b.classic === true || (b as any).isClassic === true
 
@@ -84,10 +83,18 @@ export default function Home() {
     (a, b) => (b.pages || 0) - (a.pages || 0)
   )[0]
 
+  const diff = (a: number, b: number) => a - b
+
+  const color = (n: number) =>
+    n > 0 ? '#16a34a' : n < 0 ? '#dc2626' : '#6b7280'
+
+  const format = (n: number) => (n > 0 ? `+${n}` : `${n}`)
+
   return (
     <div style={styles.container}>
       <h2 style={styles.header}>📚 Home</h2>
 
+      {/* ================= QUEST’ANNO ================= */}
       <h3 style={styles.sectionTitle}>Quest’anno</h3>
 
       <div style={styles.grid}>
@@ -99,23 +106,65 @@ export default function Home() {
 
       <BookCard title="Libro più lungo" book={longestThisYear} />
 
+      {/* ================= INSIGHT CARD UNIFICATA ================= */}
       <h3 style={styles.sectionTitle}>
-        Confronto con {previousYear}
+        📊 Rispetto all’anno precedente
       </h3>
 
-      <div style={styles.grid}>
-        <Card title="Libri letti" value={booksLastYear.length} />
-        <Card title="Pagine lette" value={pagesLastYear} />
-        <Card title="Nuovi autori" value={newAuthorsLastYear} />
-        <Card title="Classici" value={classicsLastYear.length} />
-      </div>
+      <div style={styles.insightsCard}>
+        <div style={styles.insightRow}>
+          <span>📚 Libri</span>
+          <span style={{ color: color(diff(booksThisYear.length, booksLastYear.length)), fontWeight: 700 }}>
+            {format(diff(booksThisYear.length, booksLastYear.length))}
+          </span>
+        </div>
 
-      <BookCard title="Libro più lungo" book={longestLastYear} />
+        <div style={styles.insightRow}>
+          <span>📄 Pagine</span>
+          <span style={{ color: color(diff(pagesThisYear, pagesLastYear)), fontWeight: 700 }}>
+            {pagesThisYear - pagesLastYear > 0
+              ? `+${(pagesThisYear - pagesLastYear).toLocaleString()}`
+              : (pagesThisYear - pagesLastYear).toLocaleString()}
+          </span>
+        </div>
+
+        <div style={styles.insightRow}>
+          <span>✍️ Autori</span>
+          <span style={{ color: color(diff(newAuthorsThisYear.length, newAuthorsLastYear)), fontWeight: 700 }}>
+            {format(diff(newAuthorsThisYear.length, newAuthorsLastYear))}
+          </span>
+        </div>
+
+        <div style={styles.insightRow}>
+          <span>🏛️ Classici</span>
+          <span style={{ color: color(diff(classicsThisYear.length, classicsLastYear.length)), fontWeight: 700 }}>
+            {format(diff(classicsThisYear.length, classicsLastYear.length))}
+          </span>
+        </div>
+
+        <div style={styles.divider} />
+
+        <p style={styles.subTitle}>🏆 Libro più lungo {previousYear}</p>
+
+        {longestLastYear ? (
+          <div style={styles.lastYearBook}>
+            <p style={styles.bookTitleSmall}>
+              {longestLastYear.title}
+            </p>
+            <p style={styles.bookMetaSmall}>
+              {longestLastYear.author} · {longestLastYear.pages} pagine
+            </p>
+          </div>
+        ) : (
+          <p style={styles.bookMetaSmall}>-</p>
+        )}
+      </div>
     </div>
   )
 }
 
-/* CARD */
+/* ================= COMPONENTI ================= */
+
 function Card({ title, value }: { title: string; value: any }) {
   return (
     <div style={styles.card}>
@@ -125,7 +174,6 @@ function Card({ title, value }: { title: string; value: any }) {
   )
 }
 
-/* BOOK CARD */
 function BookCard({ title, book }: { title: string; book?: any }) {
   return (
     <div style={styles.bookCard}>
@@ -144,7 +192,8 @@ function BookCard({ title, book }: { title: string; book?: any }) {
   )
 }
 
-/* STILI */
+/* ================= STILI ================= */
+
 const styles: Record<string, React.CSSProperties> = {
   container: {
     display: 'flex',
@@ -170,11 +219,17 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '10px'
   },
 
+  /* ================= 3D CARD STYLE (HOME UPDATED) ================= */
   card: {
     padding: '14px',
-    borderRadius: '14px',
-    border: '1px solid #eee',
-    background: '#fff'
+    borderRadius: '16px',
+    border: '1px solid rgba(229,231,235,0.8)',
+    background: 'linear-gradient(145deg, #ffffff, #f9fafb)',
+
+    boxShadow:
+      '0 6px 15px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.08)',
+
+    transition: 'all 0.25s ease'
   },
 
   cardTitle: {
@@ -190,11 +245,12 @@ const styles: Record<string, React.CSSProperties> = {
   bookCard: {
     padding: '14px',
     borderRadius: '14px',
-    border: '1px solid #e5e7eb',
-    background: '#f9fafb',
+    border: '1px solid #eee',
+    background: '#fff',
     display: 'flex',
     flexDirection: 'column',
-    gap: '4px'
+    gap: '4px',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.04)'
   },
 
   bookTitle: {
@@ -210,5 +266,51 @@ const styles: Record<string, React.CSSProperties> = {
   bookPages: {
     fontSize: '13px',
     color: '#777'
+  },
+
+  insightsCard: {
+    padding: '14px',
+    borderRadius: '16px',
+    background: 'linear-gradient(145deg, #ffffff, #f3f4f6)',
+    border: '1px solid #e5e7eb',
+    boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px'
+  },
+
+  insightRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    fontSize: '14px',
+    fontWeight: 500
+  },
+
+  divider: {
+    height: '1px',
+    background: '#e5e7eb',
+    margin: '6px 0'
+  },
+
+  subTitle: {
+    fontSize: '12px',
+    color: '#6b7280',
+    fontWeight: 600
+  },
+
+  lastYearBook: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px'
+  },
+
+  bookTitleSmall: {
+    fontSize: '13px',
+    fontWeight: 700
+  },
+
+  bookMetaSmall: {
+    fontSize: '12px',
+    color: '#6b7280'
   }
 }
