@@ -1,6 +1,9 @@
 import { useEffect, useState, useMemo } from 'react'
 import { db } from '../db/database'
 
+import { Search, Ghost, Brain, BookOpen } from 'lucide-react'
+import type { ReactElement } from 'react'
+
 type Book = {
   id?: number
   title: string
@@ -11,21 +14,21 @@ type Book = {
 }
 
 /* =========================
-   EMOJI MIGLIORATE PER GENERE
+   ICONE GENERI (APP STYLE)
 ========================= */
-const genreEmoji: Record<string, string> = {
-  'Giallo/Noir/Legal': '🔎',
-  'Thriller': '🔪',
-  'Horror/Gotico/Paranormale': '👻',
-  'Realista/Psicologico/Filosofico': '🧠',
-  'Narrativa per ragazzi': '📘',
-  'Saggio': '📚',
-  'Fumetto': '🦸',
-  'Storico/Di formazione/Autobiografico': '🏛️',
-  'Fantascienza': '🚀',
-  'Fantasy': '🐉',
-  'Avventura': '🧭',
-  'Distopico': '⚠️'
+const genreIcons: Record<string, ReactElement> = {
+  'Giallo/Noir/Legal': <Search size={18} />,
+  'Thriller': <Search size={18} />,
+  'Horror/Gotico/Paranormale': <Ghost size={18} />,
+  'Realista/Psicologico/Filosofico': <Brain size={18} />,
+  'Narrativa per ragazzi': <BookOpen size={18} />,
+  'Saggio': <BookOpen size={18} />,
+  'Fumetto': <BookOpen size={18} />,
+  'Storico/Di formazione/Autobiografico': <BookOpen size={18} />,
+  'Fantascienza': <BookOpen size={18} />,
+  'Fantasy': <BookOpen size={18} />,
+  'Avventura': <BookOpen size={18} />,
+  'Distopico': <BookOpen size={18} />
 }
 
 const MONTHS = [
@@ -63,7 +66,7 @@ export default function Explore() {
   }, [books])
 
   const genres = Object.entries(genreCountsMap)
-    .sort((a, b) => b[1] - a[1]) // più libri → sopra
+    .sort((a, b) => b[1] - a[1]) // più libri in alto
     .map(([genre]) => genre)
 
   const genreCounts = (genre: string) =>
@@ -124,7 +127,7 @@ export default function Explore() {
               }}
             >
               <div style={styles.rowLeft}>
-                <span>{genreEmoji[g] || '📚'}</span>
+                <span>{genreIcons[g] || <BookOpen size={18} />}</span>
                 <span style={styles.rowTitle}>{g}</span>
               </div>
 
@@ -212,13 +215,11 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     gap: '12px'
   },
-
   title: {
     fontSize: '20px',
     fontWeight: 700,
     color: '#111827'
   },
-
   back: {
     padding: '8px 10px',
     borderRadius: '10px',
@@ -227,13 +228,11 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     width: 'fit-content'
   },
-
   stack: {
     display: 'flex',
     flexDirection: 'column',
     gap: '10px'
   },
-
   rowCard: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -245,19 +244,16 @@ const styles: Record<string, React.CSSProperties> = {
     boxShadow: '0 6px 15px rgba(0,0,0,0.05)',
     cursor: 'pointer'
   },
-
   rowLeft: {
     display: 'flex',
     gap: '8px',
     alignItems: 'center'
   },
-
   rowTitle: {
     fontSize: '14px',
     fontWeight: 600,
     color: '#111827'
   },
-
   pill: {
     fontSize: '11px',
     background: '#eef2ff',
@@ -266,7 +262,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     color: '#4f46e5'
   },
-
   infoBar: {
     padding: '10px 12px',
     borderRadius: '12px',
@@ -275,13 +270,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '13px',
     fontWeight: 500
   },
-
   list: {
     display: 'flex',
     flexDirection: 'column',
     gap: '8px'
   },
-
   bookCard: {
     padding: '12px',
     borderRadius: '12px',
@@ -289,11 +282,9 @@ const styles: Record<string, React.CSSProperties> = {
     border: '1px solid #eee',
     boxShadow: '0 4px 10px rgba(0,0,0,0.05)'
   },
-
   bookTitle: {
     fontWeight: 700
   },
-
   readingPill: {
     marginTop: '6px',
     display: 'inline-flex',
