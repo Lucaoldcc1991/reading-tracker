@@ -10,13 +10,16 @@ type Book = {
   readingYear?: number
 }
 
+/* =========================
+   EMOJI MIGLIORATE PER GENERE
+========================= */
 const genreEmoji: Record<string, string> = {
-  'Giallo/Noir/Legal': '🕵️',
+  'Giallo/Noir/Legal': '🔎',
   'Thriller': '🔪',
-  'Horror/Gotico/Paranormale': '🕷️',
+  'Horror/Gotico/Paranormale': '👻',
   'Realista/Psicologico/Filosofico': '🧠',
-  'Narrativa per ragazzi': '🧒',
-  'Saggio': '📖',
+  'Narrativa per ragazzi': '📘',
+  'Saggio': '📚',
   'Fumetto': '🦸',
   'Storico/Di formazione/Autobiografico': '🏛️',
   'Fantascienza': '🚀',
@@ -186,7 +189,7 @@ export default function Explore() {
 
                   {monthName && b.readingYear && (
                     <div style={styles.readingPill}>
-                      {monthName} {b.readingYear}
+                      📅 {monthName} {b.readingYear}
                     </div>
                   )}
                 </div>
