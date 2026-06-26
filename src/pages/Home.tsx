@@ -95,7 +95,7 @@ export default function Home() {
       <h2 style={styles.header}>📚 Home</h2>
 
       {/* ================= QUEST’ANNO ================= */}
-      <h3 style={styles.sectionTitle}>Quest’anno</h3>
+      <h3 style={styles.sectionTitle}>📖 Letture di quest’anno</h3>
 
       <div style={styles.grid}>
         <Card title="Libri letti" value={booksThisYear.length} />

@@ -12,7 +12,14 @@ export default function Navbar() {
       <NavItem to="/explore" label="Esplora" active={isActive('/explore')} />
       <NavItem to="/wishlist" label="Wishlist" active={isActive('/wishlist')} />
       <NavItem to="/stats" label="Stats" active={isActive('/stats')} />
-      <NavItem to="/settings" label="Settings" active={isActive('/settings')} />
+
+      {/* SETTINGS → ICONE */}
+      <NavItem
+        to="/settings"
+        label="⚙️"
+        active={isActive('/settings')}
+        isIcon
+      />
     </nav>
   )
 }
@@ -20,18 +27,31 @@ export default function Navbar() {
 function NavItem({
   to,
   label,
-  active
+  active,
+  isIcon
 }: {
   to: string
   label: string
   active: boolean
+  isIcon?: boolean
 }) {
   return (
-    <Link to={to} style={{ ...styles.link, ...(active ? styles.active : {}) }}>
+    <Link
+      to={to}
+      style={{
+        ...styles.link,
+        ...(active ? styles.active : {}),
+        ...(isIcon ? styles.iconLink : {})
+      }}
+    >
       {label}
     </Link>
   )
 }
+
+/* =========================
+   STILI
+========================= */
 
 const styles: Record<string, React.CSSProperties> = {
   nav: {
@@ -59,5 +79,16 @@ const styles: Record<string, React.CSSProperties> = {
   active: {
     color: '#1e66ff',
     background: '#eef4ff'
+  },
+
+  iconLink: {
+    fontSize: '18px',
+    padding: '6px 8px',
+    borderRadius: '10px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '34px',
+    height: '34px'
   }
 }

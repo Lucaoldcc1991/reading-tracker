@@ -30,27 +30,41 @@ export default function Library() {
   const [editingBook, setEditingBook] = useState<Book | null>(null)
   const [showForm, setShowForm] = useState(false)
 
+  const [yearFilter, setYearFilter] = useState<number | 'all'>('all')
+
   useEffect(() => {
     loadBooks()
   }, [])
 
   const loadBooks = async () => {
-    const data = await db.books
-      .orderBy('createdAt')
-      .reverse()
-      .toArray()
+    const data = await db.books.toArray()
 
-    setBooks(data)
+    const sorted = data.sort((a, b) => {
+      const aScore = (a.readingYear ?? 0) * 100 + (a.readingMonth ?? 0)
+      const bScore = (b.readingYear ?? 0) * 100 + (b.readingMonth ?? 0)
+      return bScore - aScore
+    })
+
+    setBooks(sorted)
   }
+
+  const years = [...new Set(
+    books.map(b => b.readingYear).filter(Boolean)
+  )]
 
   const filteredBooks = books.filter((b) => {
     const q = search.toLowerCase()
-    return (
+
+    const matchesSearch =
       b.title.toLowerCase().includes(q) ||
       b.author.toLowerCase().includes(q) ||
       b.genre.toLowerCase().includes(q) ||
       (b.series || '').toLowerCase().includes(q)
-    )
+
+    const matchesYear =
+      yearFilter === 'all' || b.readingYear === yearFilter
+
+    return matchesSearch && matchesYear
   })
 
   const openAdd = () => {
@@ -66,7 +80,6 @@ export default function Library() {
   const deleteBook = async (id?: number) => {
     if (!id) return
     if (!confirm('Eliminare questo libro?')) return
-
     await db.books.delete(id)
     loadBooks()
   }
@@ -76,9 +89,10 @@ export default function Library() {
       <h2 style={styles.title}>📚 Libreria</h2>
 
       <div style={styles.counter}>
-        📊 {filteredBooks.length} libri
+        📚 {filteredBooks.length} libri
       </div>
 
+      {/* SEARCH */}
       <input
         placeholder="Cerca libro, autore, genere o serie..."
         value={search}
@@ -86,11 +100,32 @@ export default function Library() {
         style={styles.search}
       />
 
+      {/* FILTER YEAR */}
+      <select
+        value={yearFilter}
+        onChange={(e) =>
+          setYearFilter(
+            e.target.value === 'all'
+              ? 'all'
+              : Number(e.target.value)
+          )
+        }
+        style={styles.search}
+      >
+        <option value="all">Tutti gli anni</option>
+        {years.map((y) => (
+          <option key={y} value={y}>
+            {y}
+          </option>
+        ))}
+      </select>
+
+      {/* ADD */}
       <button onClick={openAdd} style={styles.add}>
         + Aggiungi libro
       </button>
 
-      {/* ================= MODAL FORM ================= */}
+      {/* MODAL */}
       {showForm && (
         <div style={styles.modalOverlay}>
           <BookForm
@@ -104,6 +139,7 @@ export default function Library() {
         </div>
       )}
 
+      {/* LIST */}
       <div style={styles.list}>
         {filteredBooks.map((book) => {
           const country = COUNTRIES.find(
@@ -112,18 +148,13 @@ export default function Library() {
 
           const monthName =
             book.readingMonth &&
-            book.readingMonth >= 1 &&
-            book.readingMonth <= 12
-              ? MONTHS[book.readingMonth - 1]
-              : ''
+            MONTHS[book.readingMonth - 1]
 
           return (
             <div
               key={book.id ?? `${book.title}-${book.createdAt}`}
               style={styles.card}
             >
-
-              {/* LEFT */}
               <div style={styles.info}>
                 <p style={styles.titleBook}>{book.title}</p>
 
@@ -141,9 +172,7 @@ export default function Library() {
                 </p>
 
                 {book.series && (
-                  <p style={styles.series}>
-                    {book.series}
-                  </p>
+                  <p style={styles.series}>{book.series}</p>
                 )}
 
                 <p style={styles.meta}>
@@ -152,24 +181,32 @@ export default function Library() {
 
                 <p style={styles.reading}>
                   {monthName && book.readingYear
-                    ? `${monthName} ${book.readingYear}`
+                    ? `📅 ${monthName} ${book.readingYear}`
                     : ''}
                 </p>
               </div>
 
-              {/* ACTIONS */}
               <div style={styles.actions}>
-                <button onClick={() => openEdit(book)} style={styles.edit}>✏️</button>
-                <button onClick={() => deleteBook(book.id)} style={styles.delete}>🗑</button>
+                <button
+                  onClick={() => openEdit(book)}
+                  style={styles.edit}
+                >
+                  ✏️
+                </button>
+
+                <button
+                  onClick={() => deleteBook(book.id)}
+                  style={styles.delete}
+                >
+                  🗑
+                </button>
               </div>
 
-              {/* CLASSICO BADGE */}
               {book.classic === true && (
                 <div style={styles.classicBadge}>
                   🏛 Classico
                 </div>
               )}
-
             </div>
           )
         })}
@@ -178,9 +215,7 @@ export default function Library() {
   )
 }
 
-/* =========================
-   STILI COMPLETI 3D
-========================= */
+/* ================= STILI 3D ================= */
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
@@ -190,37 +225,38 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   title: {
-  fontSize: '20px',
-  fontWeight: 700,
-  color: '#111827'
-},
+    fontSize: '20px',
+    fontWeight: 700,
+    color: '#111827'
+  },
 
   counter: {
     fontSize: '13px',
-    color: '#666'
+    color: '#6b7280'
   },
 
-  /* 3D INPUT SEARCH */
+  /* INPUT 3D */
   search: {
-    padding: '10px 12px',
-    borderRadius: '12px',
+    padding: '12px 14px',
+    borderRadius: '14px',
     border: '1px solid rgba(229,231,235,0.9)',
     background: 'linear-gradient(145deg, #ffffff, #f9fafb)',
-    boxShadow: '0 4px 10px rgba(0,0,0,0.04)',
-    outline: 'none',
-    transition: 'all 0.2s ease'
+    boxShadow:
+      'inset 2px 2px 5px rgba(0,0,0,0.03), 0 6px 14px rgba(0,0,0,0.05)',
+    fontSize: '14px',
+    outline: 'none'
   },
 
-  /* 3D BUTTON */
+  /* BUTTON 3D */
   add: {
-    padding: '10px',
-    borderRadius: '12px',
-    border: '1px solid rgba(229,231,235,0.8)',
+    padding: '12px 14px',
+    borderRadius: '14px',
+    border: '1px solid rgba(224,231,255,0.8)',
     background: 'linear-gradient(145deg, #eef2ff, #e0e7ff)',
-    cursor: 'pointer',
-    fontWeight: 600,
-    boxShadow: '0 6px 12px rgba(0,0,0,0.06)',
-    transition: 'all 0.2s ease'
+    boxShadow:
+      '0 8px 18px rgba(99,102,241,0.15), 0 2px 4px rgba(0,0,0,0.05)',
+    fontWeight: 700,
+    cursor: 'pointer'
   },
 
   list: {
@@ -229,19 +265,17 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '10px'
   },
 
-  /* 3D CARD */
+  /* CARD 3D */
   card: {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'center',
     padding: '14px',
-    borderRadius: '16px',
-    border: '1px solid rgba(229,231,235,0.8)',
+    borderRadius: '18px',
+    border: '1px solid rgba(229,231,235,0.7)',
     background: 'linear-gradient(145deg, #ffffff, #f9fafb)',
-    position: 'relative',
     boxShadow:
-      '0 6px 15px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.08)',
-    transition: 'all 0.25s ease'
+      '0 10px 22px rgba(0,0,0,0.06), 0 2px 6px rgba(0,0,0,0.05)',
+    position: 'relative'
   },
 
   info: {
@@ -254,20 +288,17 @@ const styles: Record<string, React.CSSProperties> = {
   titleBook: {
     fontSize: '15px',
     fontWeight: 700,
-    color: '#111'
+    color: '#111827'
   },
 
   meta: {
     fontSize: '13px',
-    color: '#555'
+    color: '#6b7280'
   },
 
   countryRow: {
     fontSize: '13px',
-    color: '#444',
-    display: 'flex',
-    gap: '6px',
-    alignItems: 'center'
+    color: '#4b5563'
   },
 
   series: {
@@ -279,12 +310,13 @@ const styles: Record<string, React.CSSProperties> = {
   reading: {
     alignSelf: 'flex-start',
     marginTop: '4px',
-    padding: '2px 8px',
+    padding: '3px 10px',
     borderRadius: '999px',
-    background: '#ecfdf5',
+    background: 'linear-gradient(145deg, #ecfdf5, #d1fae5)',
+    border: '1px solid #bbf7d0',
     color: '#16a34a',
     fontSize: '11px',
-    fontWeight: 600
+    fontWeight: 700
   },
 
   classicBadge: {
@@ -292,42 +324,34 @@ const styles: Record<string, React.CSSProperties> = {
     right: '14px',
     bottom: '10px',
     fontSize: '11px',
-    color: '#6b7280',
-    fontWeight: 600
+    color: '#6b7280'
   },
 
   actions: {
     display: 'flex',
-    flexDirection: 'row',
-    gap: '8px',
-    marginLeft: '12px'
+    gap: '8px'
   },
 
   edit: {
-    width: '36px',
-    height: '36px',
-    borderRadius: '10px',
+    width: '38px',
+    height: '38px',
+    borderRadius: '12px',
     border: '1px solid #ddd',
-    background: '#f3f4f6',
-    cursor: 'pointer'
+    background: '#fff'
   },
 
   delete: {
-    width: '36px',
-    height: '36px',
-    borderRadius: '10px',
+    width: '38px',
+    height: '38px',
+    borderRadius: '12px',
     border: '1px solid #fca5a5',
     background: '#fee2e2',
-    color: '#991b1b',
-    cursor: 'pointer'
+    color: '#991b1b'
   },
 
   modalOverlay: {
     position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100vw',
-    height: '100vh',
+    inset: 0,
     background: 'rgba(0,0,0,0.4)',
     display: 'flex',
     justifyContent: 'center',

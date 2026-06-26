@@ -13,7 +13,7 @@ type Book = {
 const genreEmoji: Record<string, string> = {
   'Giallo/Noir/Legal': '🕵️',
   'Thriller': '🔪',
-  'Horror/Gotico/Paranormale': '👻',
+  'Horror/Gotico/Paranormale': '🕷️',
   'Realista/Psicologico/Filosofico': '🧠',
   'Narrativa per ragazzi': '🧒',
   'Saggio': '📖',
@@ -50,6 +50,9 @@ export default function Explore() {
   }
 
   const genres = [...new Set(books.map(b => b.genre))]
+
+  const genreCounts = (genre: string) =>
+    books.filter(b => b.genre === genre).length
 
   const authorsByGenre = () => {
     const filtered = books.filter(b => b.genre === selectedGenre)
@@ -93,30 +96,34 @@ export default function Explore() {
         </button>
       )}
 
-      {/* GENRES */}
+      {/* ================= GENRES ================= */}
       {view === 'genres' && (
-        <div style={styles.grid}>
+        <div style={styles.stack}>
           {genres.map(g => (
             <div
               key={g}
-              style={styles.card}
+              style={styles.rowCard}
               onClick={() => {
                 setSelectedGenre(g)
                 setView('authors')
               }}
             >
-              <div style={styles.genreTitle}>
+              <div style={styles.rowLeft}>
                 <span>{genreEmoji[g] || '📚'}</span>
-                {g}
+                <span style={styles.rowTitle}>{g}</span>
               </div>
+
+              <span style={styles.pill}>
+                {genreCounts(g)}
+              </span>
             </div>
           ))}
         </div>
       )}
 
-      {/* AUTHORS */}
+      {/* ================= AUTHORS ================= */}
       {view === 'authors' && selectedGenre && (
-        <div style={styles.grid}>
+        <div style={styles.stack}>
           {authorsByGenre().map(([author, count], i) => {
             const badge =
               i === 0 ? '🥇' :
@@ -126,26 +133,28 @@ export default function Explore() {
             return (
               <div
                 key={author}
-                style={styles.card}
+                style={styles.rowCard}
                 onClick={() => {
                   setSelectedAuthor(author)
                   setView('books')
                 }}
               >
-                <div style={styles.authorRow}>
-                  <span style={styles.authorName}>
+                <div style={styles.rowLeft}>
+                  <span style={styles.rowTitle}>
                     {badge} {author}
                   </span>
-
-                  <span style={styles.badge}>{count}</span>
                 </div>
+
+                <span style={styles.pill}>
+                  {count}
+                </span>
               </div>
             )
           })}
         </div>
       )}
 
-      {/* BOOKS */}
+      {/* ================= BOOKS ================= */}
       {view === 'books' && selectedAuthor && (
         <>
           <div style={styles.infoBar}>
@@ -163,7 +172,6 @@ export default function Explore() {
                 <div key={b.id} style={styles.bookCard}>
                   <div style={styles.bookTitle}>{b.title}</div>
 
-                  {/* ✅ PILL IDENTICA ALLA LIBRERIA */}
                   {monthName && b.readingYear && (
                     <div style={styles.readingPill}>
                       {monthName} {b.readingYear}
@@ -205,13 +213,19 @@ const styles: Record<string, React.CSSProperties> = {
     width: 'fit-content'
   },
 
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
+  /* STACK VERTICALE */
+  stack: {
+    display: 'flex',
+    flexDirection: 'column',
     gap: '10px'
   },
 
-  card: {
+  /* CARD RIGA (APP STYLE) */
+  rowCard: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+
     padding: '14px',
     borderRadius: '14px',
     border: '1px solid rgba(229,231,235,0.8)',
@@ -220,31 +234,25 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer'
   },
 
-  genreTitle: {
-    fontSize: '16px',
-    fontWeight: 600,
+  rowLeft: {
     display: 'flex',
-    gap: '6px',
+    gap: '8px',
     alignItems: 'center'
   },
 
-  authorRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
-
-  authorName: {
+  rowTitle: {
     fontSize: '14px',
-    fontWeight: 700,
+    fontWeight: 600,
     color: '#111827'
   },
 
-  badge: {
+  pill: {
     fontSize: '11px',
     background: '#eef2ff',
-    padding: '2px 8px',
-    borderRadius: '999px'
+    padding: '2px 10px',
+    borderRadius: '999px',
+    fontWeight: 600,
+    color: '#4f46e5'
   },
 
   infoBar: {
@@ -274,27 +282,18 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700
   },
 
-  /* ✅ IDENTICA ALLA LIBRERIA */
   readingPill: {
-  marginTop: '6px',
-  display: 'inline-flex',
-  alignItems: 'center',
-
-  /* 🔥 chiave: evita stretching */
-  width: 'fit-content',
-  maxWidth: '100%',
-
-  padding: '3px 10px',
-  borderRadius: '999px',
-
-  background: '#ecfdf5',
-  border: '1px solid #bbf7d0',
-
-  color: '#16a34a',
-  fontSize: '11px',
-  fontWeight: 600,
-
-  lineHeight: '1',
-  whiteSpace: 'nowrap'
-}
+    marginTop: '6px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    width: 'fit-content',
+    padding: '3px 10px',
+    borderRadius: '999px',
+    background: '#ecfdf5',
+    border: '1px solid #bbf7d0',
+    color: '#16a34a',
+    fontSize: '11px',
+    fontWeight: 600,
+    whiteSpace: 'nowrap'
+  }
 }
