@@ -40,10 +40,17 @@ export default function Library() {
     const data = await db.books.toArray()
 
     const sorted = data.sort((a, b) => {
-      const aScore = (a.readingYear ?? 0) * 100 + (a.readingMonth ?? 0)
-      const bScore = (b.readingYear ?? 0) * 100 + (b.readingMonth ?? 0)
-      return bScore - aScore
-    })
+  const aScore = (a.readingYear ?? 0) * 100 + (a.readingMonth ?? 0)
+  const bScore = (b.readingYear ?? 0) * 100 + (b.readingMonth ?? 0)
+
+  // prima ordina per anno/mese
+  if (bScore !== aScore) {
+    return bScore - aScore
+  }
+
+  // stesso mese → ultimo inserito in cima
+  return (b.createdAt ?? 0) - (a.createdAt ?? 0)
+})
 
     setBooks(sorted)
   }
