@@ -77,9 +77,7 @@ export default function Wishlist() {
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.header}>
-  ⭐ Wishlist
-</h2>
+      <h2 style={styles.header}>⭐ Wishlist</h2>
 
       <p style={styles.counter}>
         Libri in lista: {items.length}
@@ -88,7 +86,7 @@ export default function Wishlist() {
       {/* FORM */}
       <div style={styles.form}>
         <input
-          placeholder="Titolo"
+          placeholder="Titolo libro"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           style={styles.input}
@@ -131,10 +129,21 @@ export default function Wishlist() {
           <div key={item.id} style={styles.card}>
 
             <div style={styles.info}>
-              <p style={styles.titleBook}>{item.title}</p>
-              <p style={styles.meta}>
-                {item.author} · {item.genre}
+
+              {/* TITOLO → NON PIÙ INVADENTE */}
+              <p style={styles.titleBook}>
+                {item.title}
               </p>
+
+              {/* METADATI PIÙ DISCRETI */}
+              <p style={styles.meta}>
+                {item.author}
+              </p>
+
+              <p style={styles.metaSoft}>
+                {item.genre}
+              </p>
+
             </div>
 
             <button
@@ -152,10 +161,11 @@ export default function Wishlist() {
 }
 
 /* =========================
-   STILE 3D UNIFICATO
+   STILE 3D COERENTE APP
 ========================= */
 
 const styles: Record<string, React.CSSProperties> = {
+
   container: {
     display: 'flex',
     flexDirection: 'column',
@@ -163,13 +173,10 @@ const styles: Record<string, React.CSSProperties> = {
   },
 
   header: {
-  fontSize: '20px',
-  fontWeight: 700,
-  color: '#111827',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '10px'
-},
+    fontSize: '20px',
+    fontWeight: 700,
+    color: '#111827'
+  },
 
   counter: {
     fontSize: '13px',
@@ -218,6 +225,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '10px'
   },
 
+  /* CARD 3D */
   card: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -225,27 +233,32 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '14px',
     border: '1px solid #e5e7eb',
     background: '#fff',
-
-    /* 3D EFFECT */
     boxShadow: '0 6px 14px rgba(0,0,0,0.08)',
-    transform: 'translateY(0px)',
     transition: 'all 0.2s ease'
   },
 
   info: {
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
+    gap: '3px'
   },
 
+  /* 👇 TITOLI MENO INVADENTI */
   titleBook: {
-    fontWeight: 700,
-    fontSize: '15px',
-    color: '#111'
+    fontWeight: 600,      // ↓ da 700 a 600
+    fontSize: '14px',     // ↓ più piccolo
+    color: '#111827'
   },
 
   meta: {
     fontSize: '12px',
     color: '#6b7280'
+  },
+
+  metaSoft: {
+    fontSize: '11px',
+    color: '#9ca3af',
+    fontStyle: 'italic'
   },
 
   delete: {

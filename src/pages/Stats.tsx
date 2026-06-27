@@ -10,12 +10,15 @@ type Book = {
   country?: string
   pages: number
   readingYear?: number
-  isClassic?: boolean
+  classic?: boolean
 }
+
+type ChartMode = 'books' | 'pages'
 
 export default function Stats() {
   const [books, setBooks] = useState<Book[]>([])
   const [yearFilter, setYearFilter] = useState<string>('all')
+  const [chartMode, setChartMode] = useState<ChartMode>('books')
 
   useEffect(() => {
     load()
@@ -45,7 +48,7 @@ export default function Stats() {
   )
 
   const classicBooks = filteredBooks.filter(
-    (b) => b.isClassic === true
+    (b) => b.classic === true
   )
 
   const longestBook =
@@ -77,6 +80,35 @@ export default function Stats() {
     (a, b) => b[1] - a[1]
   )
 
+  /* =========================
+     📊 EVOLUZIONE PER ANNO
+  ========================= */
+
+  const evolution = Object.entries(
+    readBooks.reduce(
+      (acc: Record<number, { books: number; pages: number }>, b) => {
+        if (!b.readingYear) return acc
+
+        if (!acc[b.readingYear]) {
+          acc[b.readingYear] = { books: 0, pages: 0 }
+        }
+
+        acc[b.readingYear].books += 1
+        acc[b.readingYear].pages += b.pages || 0
+
+        return acc
+      },
+      {}
+    )
+  ).sort((a, b) => Number(a[0]) - Number(b[0]))
+
+  const maxValue = Math.max(
+    ...evolution.map(([_, d]) =>
+      chartMode === 'books' ? d.books : d.pages
+    ),
+    1
+  )
+
   return (
     <div style={styles.container}>
       <h2 style={styles.header}>📊 Statistiche</h2>
@@ -94,7 +126,7 @@ export default function Stats() {
         ))}
       </select>
 
-      {/* ================= KPI 3 COLONNE PERFETTE ================= */}
+      {/* ================= KPI ================= */}
       <div style={styles.kpiRow}>
         <div style={styles.card3d}>
           <p style={styles.kpiLabel}>Libri</p>
@@ -112,7 +144,71 @@ export default function Stats() {
         </div>
       </div>
 
-      {/* libro più lungo */}
+      {/* ================= GRAFICO NUOVO (COLONNE SCROLL) ================= */}
+      <div style={styles.card3d}>
+        <div style={styles.chartHeader}>
+          <p style={styles.kpiLabel}>📈 Evoluzione lettura</p>
+
+          <div style={styles.switch}>
+            <button
+              onClick={() => setChartMode('books')}
+              style={{
+                ...styles.switchBtn,
+                background: chartMode === 'books' ? '#4f46e5' : '#eef2ff',
+                color: chartMode === 'books' ? '#fff' : '#4f46e5'
+              }}
+            >
+              Libri
+            </button>
+
+            <button
+              onClick={() => setChartMode('pages')}
+              style={{
+                ...styles.switchBtn,
+                background: chartMode === 'pages' ? '#4f46e5' : '#eef2ff',
+                color: chartMode === 'pages' ? '#fff' : '#4f46e5'
+              }}
+            >
+              Pagine
+            </button>
+          </div>
+        </div>
+
+        {/* ===== NUOVO GRAPH STYLE APP ===== */}
+        <div style={styles.scrollChart}>
+          {evolution.map(([year, data]) => {
+            const value =
+              chartMode === 'books' ? data.books : data.pages
+
+            const height = (value / maxValue) * 100
+
+            return (
+              <div key={year} style={styles.columnItem}>
+                <div style={styles.columnWrap}>
+                  <div
+                    style={{
+                      ...styles.columnBar,
+                      height: `${height}%`
+                    }}
+                  />
+                </div>
+
+                <div style={styles.columnValue}>
+                  {chartMode === 'books'
+                    ? data.books
+                    : data.pages}
+                </div>
+
+                <div style={styles.columnLabel}>
+                  {year}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* ================= RESTO INVARIATO ================= */}
       <div style={styles.card3d}>
         <p style={styles.kpiLabel}>Libro più lungo</p>
 
@@ -127,7 +223,6 @@ export default function Stats() {
         )}
       </div>
 
-      {/* INSIGHT */}
       <div style={styles.insightCard}>
         <h3 style={styles.sectionTitle}>🏆 Autori</h3>
 
@@ -190,7 +285,6 @@ const styles: Record<string, React.CSSProperties> = {
     border: '1px solid #ddd'
   },
 
-  /* 🔥 ORA PERFETTAMENTE SIMMETRICO */
   kpiRow: {
     display: 'grid',
     gridTemplateColumns: 'repeat(3, 1fr)',
@@ -217,6 +311,71 @@ const styles: Record<string, React.CSSProperties> = {
   kpiValue: {
     fontSize: '18px',
     fontWeight: 700
+  },
+
+  chartHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+
+  switch: {
+    display: 'flex',
+    gap: '6px'
+  },
+
+  switchBtn: {
+    padding: '4px 10px',
+    borderRadius: '8px',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '11px'
+  },
+
+  /* ===== GRAFICO SCROLL COLONNE ===== */
+  scrollChart: {
+    marginTop: '12px',
+    display: 'flex',
+    gap: '14px',
+    overflowX: 'auto',
+    paddingBottom: '6px'
+  },
+
+  columnItem: {
+    minWidth: '44px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center'
+  },
+
+  columnWrap: {
+    height: '110px',
+    width: '10px',
+    display: 'flex',
+    alignItems: 'flex-end',
+    background: '#eef2ff',
+    borderRadius: '999px',
+    overflow: 'hidden'
+  },
+
+  columnBar: {
+    width: '100%',
+    background: 'linear-gradient(180deg, #4f46e5, #7c3aed)',
+    borderRadius: '999px',
+    transition: 'height 0.3s ease'
+  },
+
+  columnValue: {
+    fontSize: '10px',
+    marginTop: '6px',
+    fontWeight: 600,
+    color: '#4f46e5'
+  },
+
+  columnLabel: {
+    fontSize: '10px',
+    marginTop: '2px',
+    color: '#6b7280'
   },
 
   bookTitle: {
