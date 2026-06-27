@@ -14,13 +14,13 @@ type Book = {
    EMOJI GENERI
 ========================= */
 const genreIcons: Record<string, string> = {
-  'Giallo/Noir/Legal': '🔎',
+  'Giallo/Noir/Legal': '🕵🏻‍♂️',
   'Thriller': '🔪',
-  'Horror/Gotico/Paranormale': '👻',
+  'Horror/Gotico/Paranormale': '🧟‍♂️',
   'Realista/Psicologico/Filosofico': '🧠',
-  'Narrativa per ragazzi': '📘',
+  'Narrativa per ragazzi': '🎎',
   'Saggio': '📖',
-  'Fumetto': '🦸',
+  'Fumetto': '🃏',
   'Storico/Di formazione/Autobiografico': '🏛️',
   'Fantascienza': '🚀',
   'Fantasy': '🐉',
