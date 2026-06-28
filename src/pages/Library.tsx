@@ -96,7 +96,7 @@ export default function Library() {
       <h2 style={styles.title}>📚 Libreria</h2>
 
       <div style={styles.counter}>
-        📚 {filteredBooks.length} libri
+        📖 {filteredBooks.length} libri
       </div>
 
       {/* SEARCH */}
