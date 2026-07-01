@@ -29,8 +29,9 @@ export default function Library() {
   const [search, setSearch] = useState('')
   const [editingBook, setEditingBook] = useState<Book | null>(null)
   const [showForm, setShowForm] = useState(false)
-
   const [yearFilter, setYearFilter] = useState<number | 'all'>('all')
+
+  const [openSwipeId, setOpenSwipeId] = useState<number | null>(null)
 
   useEffect(() => {
     loadBooks()
@@ -40,17 +41,12 @@ export default function Library() {
     const data = await db.books.toArray()
 
     const sorted = data.sort((a, b) => {
-  const aScore = (a.readingYear ?? 0) * 100 + (a.readingMonth ?? 0)
-  const bScore = (b.readingYear ?? 0) * 100 + (b.readingMonth ?? 0)
+      const aScore = (a.readingYear ?? 0) * 100 + (a.readingMonth ?? 0)
+      const bScore = (b.readingYear ?? 0) * 100 + (b.readingMonth ?? 0)
 
-  // prima ordina per anno/mese
-  if (bScore !== aScore) {
-    return bScore - aScore
-  }
-
-  // stesso mese → ultimo inserito in cima
-  return (b.createdAt ?? 0) - (a.createdAt ?? 0)
-})
+      if (bScore !== aScore) return bScore - aScore
+      return (b.createdAt ?? 0) - (a.createdAt ?? 0)
+    })
 
     setBooks(sorted)
   }
@@ -91,6 +87,55 @@ export default function Library() {
     loadBooks()
   }
 
+  /* ================= SWIPE ================= */
+
+  const swipeState: Record<number, {
+    startX: number
+    currentX: number
+    offset: number
+  }> = {}
+
+  const handleTouchStart = (e: any, id?: number) => {
+    if (!id) return
+    setOpenSwipeId(id)
+
+    swipeState[id] = {
+      startX: e.touches[0].clientX,
+      currentX: 0,
+      offset: 0
+    }
+  }
+
+  const handleTouchMove = (e: any, id?: number) => {
+    if (!id || !swipeState[id]) return
+
+    const deltaX =
+      e.touches[0].clientX - swipeState[id].startX
+
+    if (deltaX < 0) {
+      swipeState[id].offset = Math.max(deltaX, -120)
+    }
+  }
+
+  const handleTouchEnd = (id?: number) => {
+    if (!id || !swipeState[id]) return
+
+    const offset = swipeState[id].offset
+
+    if (offset < -60) {
+      swipeState[id].offset = -120
+      setOpenSwipeId(id)
+    } else {
+      swipeState[id].offset = 0
+      setOpenSwipeId(null)
+    }
+  }
+
+  const getOffset = (id?: number) => {
+    if (!id) return 0
+    return openSwipeId === id ? -120 : 0
+  }
+
   return (
     <div style={styles.container}>
       <h2 style={styles.title}>📚 Libreria</h2>
@@ -99,15 +144,13 @@ export default function Library() {
         📖 {filteredBooks.length} libri
       </div>
 
-      {/* SEARCH */}
       <input
-        placeholder="Cerca libro, autore, genere o serie..."
+        placeholder="Cerca libro..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         style={styles.search}
       />
 
-      {/* FILTER YEAR */}
       <select
         value={yearFilter}
         onChange={(e) =>
@@ -127,12 +170,10 @@ export default function Library() {
         ))}
       </select>
 
-      {/* ADD */}
       <button onClick={openAdd} style={styles.add}>
         + Aggiungi libro
       </button>
 
-      {/* MODAL */}
       {showForm && (
         <div style={styles.modalOverlay}>
           <BookForm
@@ -146,7 +187,6 @@ export default function Library() {
         </div>
       )}
 
-      {/* LIST */}
       <div style={styles.list}>
         {filteredBooks.map((book) => {
           const country = COUNTRIES.find(
@@ -159,61 +199,71 @@ export default function Library() {
 
           return (
             <div
-              key={book.id ?? `${book.title}-${book.createdAt}`}
-              style={styles.card}
+              key={book.id}
+              style={styles.swipeWrapper}
             >
-              <div style={styles.info}>
-                <p style={styles.titleBook}>{book.title}</p>
-
-                <p style={styles.meta}>
-                  {book.author} · {book.genre}
-                </p>
-
-                <p style={styles.countryRow}>
-                  {country?.flag} {country?.name}
-                  {book.publicationYear && (
-                    <span style={styles.meta}>
-                      {' '} - {book.publicationYear}
-                    </span>
-                  )}
-                </p>
-
-                {book.series && (
-                  <p style={styles.series}>{book.series}</p>
-                )}
-
-                <p style={styles.meta}>
-                  {book.pages} pagine
-                </p>
-
-                <p style={styles.reading}>
-                  {monthName && book.readingYear
-                    ? `📅 ${monthName} ${book.readingYear}`
-                    : ''}
-                </p>
-              </div>
-
-              <div style={styles.actions}>
+              {/* ACTIONS */}
+              <div style={styles.actionsBehind}>
                 <button
-                  onClick={() => openEdit(book)}
                   style={styles.edit}
+                  onClick={() => openEdit(book)}
                 >
                   ✏️
                 </button>
 
                 <button
-                  onClick={() => deleteBook(book.id)}
                   style={styles.delete}
+                  onClick={() => deleteBook(book.id)}
                 >
                   🗑
                 </button>
               </div>
 
-              {book.classic === true && (
-                <div style={styles.classicBadge}>
-                  🏛 Classico
+              {/* CARD */}
+              <div
+                style={{
+                  ...styles.card,
+                  transform: `translateX(${getOffset(book.id)}px)`
+                }}
+                onTouchStart={(e) =>
+                  handleTouchStart(e, book.id)
+                }
+                onTouchMove={(e) =>
+                  handleTouchMove(e, book.id)
+                }
+                onTouchEnd={() =>
+                  handleTouchEnd(book.id)
+                }
+                onClick={() => setOpenSwipeId(null)}
+              >
+                <div style={styles.info}>
+                  <p style={styles.titleBook}>{book.title}</p>
+
+                  <p style={styles.meta}>
+                    {book.author} · {book.genre}
+                  </p>
+
+                  <p style={styles.countryRow}>
+                    {country?.flag} {country?.name}
+                  </p>
+
+                  {book.series && (
+                    <p style={styles.series}>
+                      {book.series}
+                    </p>
+                  )}
+
+                  <p style={styles.meta}>
+                    {book.pages} pagine
+                  </p>
+
+                  <p style={styles.reading}>
+                    {monthName && book.readingYear
+                      ? `📅 ${monthName} ${book.readingYear}`
+                      : ''}
+                  </p>
                 </div>
-              )}
+              </div>
             </div>
           )
         })}
@@ -222,7 +272,7 @@ export default function Library() {
   )
 }
 
-/* ================= STILI 3D ================= */
+/* ================= STILI ================= */
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
@@ -233,8 +283,7 @@ const styles: Record<string, React.CSSProperties> = {
 
   title: {
     fontSize: '20px',
-    fontWeight: 700,
-    color: '#111827'
+    fontWeight: 700
   },
 
   counter: {
@@ -242,26 +291,16 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#6b7280'
   },
 
-  /* INPUT 3D */
   search: {
     padding: '12px 14px',
     borderRadius: '14px',
-    border: '1px solid rgba(229,231,235,0.9)',
-    background: 'linear-gradient(145deg, #ffffff, #f9fafb)',
-    boxShadow:
-      'inset 2px 2px 5px rgba(0,0,0,0.03), 0 6px 14px rgba(0,0,0,0.05)',
-    fontSize: '14px',
-    outline: 'none'
+    border: '1px solid #eee'
   },
 
-  /* BUTTON 3D */
   add: {
     padding: '12px 14px',
     borderRadius: '14px',
-    border: '1px solid rgba(224,231,255,0.8)',
-    background: 'linear-gradient(145deg, #eef2ff, #e0e7ff)',
-    boxShadow:
-      '0 8px 18px rgba(99,102,241,0.15), 0 2px 4px rgba(0,0,0,0.05)',
+    background: '#eef2ff',
     fontWeight: 700,
     cursor: 'pointer'
   },
@@ -272,87 +311,66 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '10px'
   },
 
-  /* CARD 3D */
+  swipeWrapper: {
+    position: 'relative',
+    overflow: 'hidden',
+    borderRadius: '18px'
+  },
+
+  actionsBehind: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: '120px',
+    display: 'flex',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    background: '#fef2f2'
+  },
+
   card: {
     display: 'flex',
     justifyContent: 'space-between',
     padding: '14px',
     borderRadius: '18px',
-    border: '1px solid rgba(229,231,235,0.7)',
-    background: 'linear-gradient(145deg, #ffffff, #f9fafb)',
-    boxShadow:
-      '0 10px 22px rgba(0,0,0,0.06), 0 2px 6px rgba(0,0,0,0.05)',
-    position: 'relative'
+    background: '#fff',
+    border: '1px solid #eee',
+    transition: 'transform 0.2s ease'
   },
 
   info: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '4px',
-    flex: 1
+    gap: 4
   },
 
-  titleBook: {
-    fontSize: '15px',
-    fontWeight: 700,
-    color: '#111827'
-  },
+  titleBook: { fontWeight: 700 },
 
-  meta: {
-    fontSize: '13px',
-    color: '#6b7280'
-  },
+  meta: { fontSize: 13, color: '#6b7280' },
 
-  countryRow: {
-    fontSize: '13px',
-    color: '#4b5563'
-  },
+  countryRow: { fontSize: 13 },
 
-  series: {
-    fontSize: '13px',
-    fontStyle: 'italic',
-    color: '#6b7280'
-  },
+  series: { fontSize: 13, fontStyle: 'italic' },
 
   reading: {
-    alignSelf: 'flex-start',
-    marginTop: '4px',
-    padding: '3px 10px',
-    borderRadius: '999px',
-    background: 'linear-gradient(145deg, #ecfdf5, #d1fae5)',
-    border: '1px solid #bbf7d0',
+    fontSize: 11,
     color: '#16a34a',
-    fontSize: '11px',
     fontWeight: 700
   },
 
-  classicBadge: {
-    position: 'absolute',
-    right: '14px',
-    bottom: '10px',
-    fontSize: '11px',
-    color: '#6b7280'
-  },
-
-  actions: {
-    display: 'flex',
-    gap: '8px'
-  },
-
   edit: {
-    width: '38px',
-    height: '38px',
-    borderRadius: '12px',
+    background: '#fff',
     border: '1px solid #ddd',
-    background: '#fff'
+    padding: 10,
+    borderRadius: 10
   },
 
   delete: {
-    width: '38px',
-    height: '38px',
-    borderRadius: '12px',
-    border: '1px solid #fca5a5',
     background: '#fee2e2',
+    border: '1px solid #fca5a5',
+    padding: 10,
+    borderRadius: 10,
     color: '#991b1b'
   },
 
@@ -362,7 +380,6 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'rgba(0,0,0,0.4)',
     display: 'flex',
     justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 9999
+    alignItems: 'center'
   }
 }

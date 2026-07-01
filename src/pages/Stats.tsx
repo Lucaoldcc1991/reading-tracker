@@ -13,13 +13,11 @@ type Book = {
   classic?: boolean
 }
 
-type ChartMode = 'books' | 'pages' | 'newAuthors'
+type ChartMode = 'books' | 'pages' | 'classics' | 'newAuthors'
 
 export default function Stats() {
   const [books, setBooks] = useState<Book[]>([])
-  const [yearFilter, setYearFilter] = useState<string>('all')
   const [chartMode, setChartMode] = useState<ChartMode>('books')
-  const [selectedYear, setSelectedYear] = useState<string | null>(null)
 
   useEffect(() => {
     load()
@@ -32,36 +30,25 @@ export default function Stats() {
 
   const readBooks = books.filter((b) => b.readingYear)
 
-  const years = Array.from(
-    new Set(readBooks.map((b) => b.readingYear))
-  ).sort((a, b) => (b as number) - (a as number))
+  const totalBooks = readBooks.length
 
-  const filteredBooks =
-    yearFilter === 'all'
-      ? readBooks
-      : readBooks.filter((b) => String(b.readingYear) === yearFilter)
-
-  const totalBooks = filteredBooks.length
-
-  const totalPages = filteredBooks.reduce(
+  const totalPages = readBooks.reduce(
     (sum, b) => sum + (b.pages || 0),
     0
   )
 
-  const classicBooks = filteredBooks.filter(
-    (b) => b.classic === true
-  )
+  const classicBooks = readBooks.filter((b) => b.classic === true)
 
   const longestBook =
-    filteredBooks.length > 0
-      ? [...filteredBooks].sort(
+    readBooks.length > 0
+      ? [...readBooks].sort(
           (a, b) => (b.pages || 0) - (a.pages || 0)
         )[0]
       : null
 
   const mapCount = (key: keyof Book) => {
     const map: Record<string, number> = {}
-    filteredBooks.forEach((b: any) => {
+    readBooks.forEach((b: any) => {
       if (!b[key]) return
       map[b[key]] = (map[b[key]] || 0) + 1
     })
@@ -71,7 +58,7 @@ export default function Stats() {
   const topGenres = mapCount('genre')
 
   const countryMap: Record<string, number> = {}
-  filteredBooks.forEach((b) => {
+  readBooks.forEach((b) => {
     if (!b.country) return
     countryMap[b.country] = (countryMap[b.country] || 0) + 1
   })
@@ -80,21 +67,18 @@ export default function Stats() {
     (a, b) => b[1] - a[1]
   )
 
-  /* =========================
-     📊 EVOLUZIONE BASE (libri/pagine)
-  ========================= */
-
   const evolutionBase = Object.entries(
     readBooks.reduce(
-      (acc: Record<number, { books: number; pages: number }>, b) => {
+      (acc: Record<number, { books: number; pages: number; classics: number }>, b) => {
         if (!b.readingYear) return acc
 
         if (!acc[b.readingYear]) {
-          acc[b.readingYear] = { books: 0, pages: 0 }
+          acc[b.readingYear] = { books: 0, pages: 0, classics: 0 }
         }
 
         acc[b.readingYear].books += 1
         acc[b.readingYear].pages += b.pages || 0
+        if (b.classic) acc[b.readingYear].classics += 1
 
         return acc
       },
@@ -102,16 +86,13 @@ export default function Stats() {
     )
   ).sort((a, b) => Number(a[0]) - Number(b[0]))
 
-  /* =========================
-     🆕 NUOVI AUTORI PER ANNO
-  ========================= */
-
+  /* ⭐ NUOVI AUTORI PER ANNO */
   const allSorted = [...readBooks].sort(
     (a, b) => (a.readingYear || 0) - (b.readingYear || 0)
   )
 
   const seenAuthors = new Set<string>()
-  const newAuthorsByYear: Record<number, Set<string>> = {}
+  const newAuthorsByYear: Record<number, number> = {}
 
   allSorted.forEach((b) => {
     if (!b.readingYear) return
@@ -119,62 +100,33 @@ export default function Stats() {
     if (!seenAuthors.has(b.author)) {
       seenAuthors.add(b.author)
 
-      if (!newAuthorsByYear[b.readingYear]) {
-        newAuthorsByYear[b.readingYear] = new Set()
-      }
-
-      newAuthorsByYear[b.readingYear].add(b.author)
+      newAuthorsByYear[b.readingYear] =
+        (newAuthorsByYear[b.readingYear] || 0) + 1
     }
   })
 
-  const evolutionNewAuthors = Object.entries(newAuthorsByYear)
-    .map(([year, set]) => [year, set.size])
-    .sort((a, b) => Number(a[0]) - Number(b[0]))
-
   const maxValue = Math.max(
-    ...(chartMode === 'books'
-      ? evolutionBase.map(([_, d]) => d.books)
-      : chartMode === 'pages'
-      ? evolutionBase.map(([_, d]) => d.pages)
-      : evolutionNewAuthors.map(([_, v]) => Number(v))),
+    ...evolutionBase.map(([_, d]) => {
+      if (chartMode === 'books') return d.books
+      if (chartMode === 'pages') return d.pages
+      if (chartMode === 'classics') return d.classics
+      return (newAuthorsByYear[Number(_)] || 0)
+    }),
     1
   )
 
-  const totalAuthors = new Set(
-    filteredBooks.map((b) => b.author).filter(Boolean)
-  ).size
-
   const topAuthors = Object.entries(
-    filteredBooks.reduce((acc: Record<string, number>, b) => {
+    readBooks.reduce((acc: Record<string, number>, b) => {
       if (!b.author) return acc
       acc[b.author] = (acc[b.author] || 0) + 1
       return acc
     }, {})
   ).sort((a, b) => b[1] - a[1])
 
-  const selectedAuthors =
-    selectedYear && newAuthorsByYear[Number(selectedYear)]
-      ? Array.from(newAuthorsByYear[Number(selectedYear)])
-      : []
-
   return (
     <div style={styles.container}>
       <h2 style={styles.header}>📊 Statistiche</h2>
 
-      <select
-        value={yearFilter}
-        onChange={(e) => setYearFilter(e.target.value)}
-        style={styles.select}
-      >
-        <option value="all">Tutti gli anni</option>
-        {years.map((y) => (
-          <option key={y} value={String(y)}>
-            {y}
-          </option>
-        ))}
-      </select>
-
-      {/* KPI */}
       <div style={styles.kpiRow}>
         <div style={styles.card3d}>
           <p style={styles.kpiLabel}>Libri</p>
@@ -192,7 +144,7 @@ export default function Stats() {
         </div>
       </div>
 
-      {/* GRAFICO */}
+      {/* EVOLUZIONE */}
       <div style={styles.card3d}>
         <div style={styles.chartHeader}>
           <p style={styles.kpiLabel}>📈 Evoluzione</p>
@@ -221,6 +173,17 @@ export default function Stats() {
             </button>
 
             <button
+              onClick={() => setChartMode('classics')}
+              style={{
+                ...styles.switchBtn,
+                background: chartMode === 'classics' ? '#4f46e5' : '#eef2ff',
+                color: chartMode === 'classics' ? '#fff' : '#4f46e5'
+              }}
+            >
+              Classici
+            </button>
+
+            <button
               onClick={() => setChartMode('newAuthors')}
               style={{
                 ...styles.switchBtn,
@@ -228,33 +191,26 @@ export default function Stats() {
                 color: chartMode === 'newAuthors' ? '#fff' : '#4f46e5'
               }}
             >
-              Nuovi autori
+              Autori scoperti
             </button>
           </div>
         </div>
 
         <div style={styles.scrollChart}>
-          {(chartMode === 'books'
-            ? evolutionBase
-            : chartMode === 'pages'
-            ? evolutionBase
-            : evolutionNewAuthors
-          ).map(([year, data]) => {
+          {evolutionBase.map(([year, data]) => {
             const value =
               chartMode === 'books'
-                ? (data as any).books
+                ? data.books
                 : chartMode === 'pages'
-                ? (data as any).pages
-                : (data as number)
+                ? data.pages
+                : chartMode === 'classics'
+                ? data.classics
+                : (newAuthorsByYear[Number(year)] || 0)
 
             const height = (value / maxValue) * 100
 
             return (
-              <div
-                key={year}
-                style={styles.columnItem}
-                onClick={() => setSelectedYear(String(year))}
-              >
+              <div key={year} style={styles.columnItem}>
                 <div style={styles.columnWrap}>
                   <div
                     style={{
@@ -264,33 +220,12 @@ export default function Stats() {
                   />
                 </div>
 
-                <div style={styles.columnValue}>
-                  {value}
-                </div>
-
+                <div style={styles.columnValue}>{value}</div>
                 <div style={styles.columnLabel}>{year}</div>
               </div>
             )
           })}
         </div>
-
-        {selectedYear && chartMode === 'newAuthors' && (
-          <div style={{ marginTop: 10 }}>
-            <p style={styles.kpiLabel}>
-              Nuovi autori nel {selectedYear}
-            </p>
-
-            <div style={styles.inlineRow}>
-              {selectedAuthors.length > 0
-                ? selectedAuthors.map((a) => (
-                    <span key={a} style={styles.pill}>
-                      {a}
-                    </span>
-                  ))
-                : 'Nessuno'}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* LIBRO PIÙ LUNGO */}
@@ -310,175 +245,86 @@ export default function Stats() {
 
       {/* INSIGHT */}
       <div style={styles.insightCard}>
-        <h3 style={styles.sectionTitle}>
-          🏆 Top 5 autori / {totalAuthors}
-        </h3>
+        <div style={styles.sectionCard}>
+          <h3 style={styles.sectionTitle}>✍️ Autori più letti</h3>
+          {topAuthors.slice(0, 3).map(([author, count]) => (
+            <div key={author} style={styles.row}>
+              {author} <span style={styles.pill}>{count}</span>
+            </div>
+          ))}
+        </div>
 
-        {topAuthors.slice(0, 5).map(([author, count], i) => (
-          <div key={author} style={styles.row}>
-            <span style={styles.inlineRow}>
-              {i + 1}° {author}
-              <span style={styles.pill}>{count}</span>
-            </span>
-          </div>
-        ))}
-
-        <h3 style={styles.sectionTitle}>🌍 Paesi</h3>
-        {countries.slice(0, 10).map(([country, count]) => {
-          const c = COUNTRIES.find(x => x.name === country)
-
-          return (
-            <div key={country} style={styles.row}>
-              <span style={styles.inlineRow}>
+        <div style={styles.sectionCard}>
+          <h3 style={styles.sectionTitle}>🌍 Paesi più esplorati</h3>
+          {countries.slice(0, 3).map(([country, count]) => {
+            const c = COUNTRIES.find(x => x.name === country)
+            return (
+              <div key={country} style={styles.row}>
                 {c?.flag} {country}
                 <span style={styles.pill}>{count}</span>
-              </span>
-            </div>
-          )
-        })}
+              </div>
+            )
+          })}
+        </div>
 
-        <h3 style={styles.sectionTitle}>📚 Generi</h3>
-        {topGenres.slice(0, 10).map(([genre, count]) => (
-          <div key={genre} style={styles.row}>
-            <span style={styles.inlineRow}>
-              {genre}
-              <span style={styles.pill}>{count}</span>
-            </span>
-          </div>
-        ))}
+        <div style={styles.sectionCard}>
+          <h3 style={styles.sectionTitle}>📚 Generi preferiti</h3>
+          {topGenres.slice(0, 3).map(([genre, count]) => (
+            <div key={genre} style={styles.row}>
+              {genre} <span style={styles.pill}>{count}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
 }
 
-/* ================= STILI ================= */
-
+/* STILI INVARIATI */
 const styles: Record<string, React.CSSProperties> = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px'
-  },
-  header: {
-    fontSize: '28px',
-    fontWeight: 800
-  },
-  select: {
-    padding: '10px',
-    borderRadius: '12px',
-    border: '1px solid #ddd'
-  },
-  kpiRow: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '12px'
-  },
+  container: { display: 'flex', flexDirection: 'column', gap: '12px' },
+  header: { fontSize: '28px', fontWeight: 800 },
+  kpiRow: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' },
   card3d: {
     padding: '14px',
     borderRadius: '16px',
     background: 'linear-gradient(145deg, #ffffff, #f9fafb)',
     border: '1px solid #e5e7eb',
-    boxShadow: '0 6px 18px rgba(0,0,0,0.06)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-    minHeight: '90px'
+    boxShadow: '0 6px 18px rgba(0,0,0,0.06)'
   },
-  kpiLabel: {
-    fontSize: '12px',
-    color: '#777'
-  },
-  kpiValue: {
-    fontSize: '18px',
-    fontWeight: 700
-  },
-  chartHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
-  switch: {
-    display: 'flex',
-    gap: '6px'
-  },
-  switchBtn: {
-    padding: '4px 10px',
-    borderRadius: '8px',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: '11px'
-  },
-  scrollChart: {
-    marginTop: '12px',
-    display: 'flex',
-    gap: '14px',
-    overflowX: 'auto',
-    paddingBottom: '6px'
-  },
-  columnItem: {
-    minWidth: '44px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    cursor: 'pointer'
-  },
-  columnWrap: {
-    height: '110px',
-    width: '10px',
-    display: 'flex',
-    alignItems: 'flex-end',
-    background: '#eef2ff',
-    borderRadius: '999px',
-    overflow: 'hidden'
-  },
-  columnBar: {
-    width: '100%',
-    background: 'linear-gradient(180deg, #4f46e5, #7c3aed)',
-    borderRadius: '999px',
-    transition: 'height 0.3s ease'
-  },
-  columnValue: {
-    fontSize: '10px',
-    marginTop: '6px',
-    fontWeight: 600,
-    color: '#4f46e5'
-  },
-  columnLabel: {
-    fontSize: '10px',
-    marginTop: '2px',
-    color: '#6b7280'
-  },
-  bookTitle: {
-    fontSize: '15px',
-    fontWeight: 700
-  },
-  bookMeta: {
-    fontSize: '13px',
-    color: '#555'
-  },
+  kpiLabel: { fontSize: '12px', color: '#777' },
+  kpiValue: { fontSize: '18px', fontWeight: 700 },
+  chartHeader: { display: 'flex', justifyContent: 'space-between' },
+  switch: { display: 'flex', gap: '6px' },
+  switchBtn: { padding: '4px 10px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '11px' },
+  scrollChart: { display: 'flex', gap: '14px', overflowX: 'auto', marginTop: '12px' },
+  columnItem: { minWidth: '44px', display: 'flex', flexDirection: 'column', alignItems: 'center' },
+  columnWrap: { height: '110px', width: '10px', display: 'flex', alignItems: 'flex-end', background: '#eef2ff', borderRadius: '999px' },
+  columnBar: { width: '100%', background: 'linear-gradient(180deg, #4f46e5, #7c3aed)', borderRadius: '12px' },
+  columnValue: { fontSize: '10px', marginTop: '6px' },
+  columnLabel: { fontSize: '10px', color: '#6b7280' },
+  bookTitle: { fontSize: '15px', fontWeight: 700 },
+  bookMeta: { fontSize: '13px', color: '#555' },
   insightCard: {
     padding: '14px',
     borderRadius: '16px',
     background: 'linear-gradient(145deg, #ffffff, #f3f4f6)',
-    border: '1px solid #e5e7eb',
-    boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
     display: 'flex',
     flexDirection: 'column',
     gap: '10px'
   },
-  sectionTitle: {
-    fontSize: '14px',
-    fontWeight: 700,
-    marginTop: '8px'
+  sectionCard: {
+    padding: '12px',
+    borderRadius: '12px',
+    background: '#fff',
+    border: '1px solid #eee'
   },
+  sectionTitle: { fontSize: '14px', fontWeight: 700, marginBottom: '8px' },
   row: {
+    display: 'flex',
+    justifyContent: 'space-between',
     fontSize: '13px',
-    fontWeight: 500
-  },
-  inlineRow: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '6px'
+    padding: '4px 0'
   },
   pill: {
     padding: '2px 8px',

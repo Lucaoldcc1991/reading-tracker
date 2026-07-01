@@ -8,22 +8,8 @@ type Book = {
   genre: string
   readingMonth?: number
   readingYear?: number
+  publicationYear?: number
   classic?: boolean
-}
-
-const genreIcons: Record<string, string> = {
-  'Giallo/Noir/Legal': '🕵🏻‍♂️',
-  'Thriller': '🔪',
-  'Horror/Gotico/Paranormale': '🧟‍♂️',
-  'Realista/Psicologico/Filosofico': '🧠',
-  'Narrativa per ragazzi': '🎎',
-  'Saggio': '📖',
-  'Fumetto': '🃏',
-  'Storico/Di formazione/Autobiografico': '🏛️',
-  'Fantascienza': '🚀',
-  'Fantasy': '🐉',
-  'Avventura': '🧭',
-  'Distopico': '⚠️'
 }
 
 const MONTHS = [
@@ -32,14 +18,24 @@ const MONTHS = [
   'Settembre','Ottobre','Novembre','Dicembre'
 ]
 
-type View = 'home' | 'genres' | 'classics' | 'authors' | 'books'
+type View = 'home' | 'genres' | 'classics' | 'authorsAll' | 'periods'
+
+type AuthorItem = {
+  author: string
+  count: number
+  surname: string
+  name: string
+}
 
 export default function Explore() {
   const [books, setBooks] = useState<Book[]>([])
   const [view, setView] = useState<View>('home')
 
-  const [selectedGenre, setSelectedGenre] = useState<string | null>(null)
-  const [selectedAuthor, setSelectedAuthor] = useState<string | null>(null)
+  const [globalAuthor, setGlobalAuthor] = useState<string | null>(null)
+  const [searchAuthor, setSearchAuthor] = useState('')
+  const [letterFilter, setLetterFilter] = useState<string | null>(null)
+
+  const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null)
 
   useEffect(() => {
     load()
@@ -50,97 +46,121 @@ export default function Explore() {
     setBooks(data)
   }
 
-  /* ================= GENERI ================= */
-  const genreCountsMap = useMemo(() => {
-    return books.reduce((acc: Record<string, number>, b) => {
-      acc[b.genre] = (acc[b.genre] || 0) + 1
-      return acc
-    }, {})
+  const getPeriod = (year?: number) => {
+    if (!year) return 'Sconosciuto'
+    if (year < 1800) return 'Pre-1800'
+    if (year < 1850) return '1800–1849'
+    if (year < 1900) return '1850–1899'
+    if (year < 1915) return '1900–1914'
+    if (year < 1946) return '1915–1945'
+    if (year < 1980) return '1946–1979'
+    if (year < 2000) return '1980–1999'
+    return '2000+'
+  }
+
+  const periods = useMemo(() => {
+    const map: Record<string, Book[]> = {}
+
+    books.forEach(b => {
+      const period = getPeriod(b.publicationYear ?? b.readingYear)
+      if (!map[period]) map[period] = []
+      map[period].push(b)
+    })
+
+    return Object.entries(map).sort(([a], [b]) => a.localeCompare(b))
   }, [books])
 
-  const genres = Object.entries(genreCountsMap)
-    .sort((a, b) => b[1] - a[1])
-    .map(([genre]) => genre)
+  const booksByPeriod = useMemo(() => {
+    if (!selectedPeriod) return []
+    return books.filter(
+      b => getPeriod(b.publicationYear ?? b.readingYear) === selectedPeriod
+    )
+  }, [books, selectedPeriod])
 
-  const genreCounts = (genre: string) =>
-    books.filter(b => b.genre === genre).length
+  const totalBooks = books.length
 
-  /* ================= AUTORI ================= */
-  const authorsByGenre = () => {
-    const filtered = books.filter(b => b.genre === selectedGenre)
+  const totalAuthors = useMemo(() => {
+    return new Set(books.map(b => b.author)).size
+  }, [books])
+
+  const allAuthors: AuthorItem[] = useMemo(() => {
     const map: Record<string, number> = {}
 
-    filtered.forEach(b => {
+    books.forEach(b => {
       map[b.author] = (map[b.author] || 0) + 1
     })
 
-    return Object.entries(map).sort((a, b) => b[1] - a[1])
-  }
+    return Object.entries(map)
+      .map(([author, count]) => {
+        const parts = author.trim().split(' ')
+        const surname = parts.length > 1 ? parts[parts.length - 1] : author
+        const name = parts.slice(0, -1).join(' ')
+        return { author, count, surname, name }
+      })
+      .sort((a, b) => a.surname.localeCompare(b.surname))
+  }, [books])
 
-  const booksByAuthor = books
-    .filter(b =>
-      b.genre === selectedGenre &&
-      b.author === selectedAuthor
-    )
-    .sort((a, b) => {
-      const aKey = (a.readingYear ?? 0) * 100 + (a.readingMonth ?? 0)
-      const bKey = (b.readingYear ?? 0) * 100 + (b.readingMonth ?? 0)
-      return bKey - aKey
+  const filteredAuthors = useMemo(() => {
+    return allAuthors.filter(a => {
+      const matchSearch =
+        a.author.toLowerCase().includes(searchAuthor.toLowerCase())
+
+      const matchLetter =
+        !letterFilter || a.surname.toUpperCase().startsWith(letterFilter)
+
+      return matchSearch && matchLetter
+    })
+  }, [allAuthors, searchAuthor, letterFilter])
+
+  const groupedAuthors = useMemo(() => {
+    const groups: Record<string, AuthorItem[]> = {}
+
+    filteredAuthors.forEach(a => {
+      const letter = a.surname.charAt(0).toUpperCase()
+      if (!groups[letter]) groups[letter] = []
+      groups[letter].push(a)
     })
 
-  /* ================= CLASSICI ================= */
-  const classicBooks = books.filter(b => b.classic)
+    return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b))
+  }, [filteredAuthors])
 
-  const classicsByAuthor = useMemo(() => {
-    const map: Record<string, Book[]> = {}
+  const booksByGlobalAuthor = useMemo(() => {
+    if (!globalAuthor) return []
 
-    classicBooks.forEach(b => {
-      if (!map[b.author]) map[b.author] = []
-      map[b.author].push(b)
-    })
-
-    return Object.entries(map).sort((a, b) => b[1].length - a[1].length)
-  }, [classicBooks])
-
-  const classicsBySelectedAuthor: Book[] = useMemo(() => {
-    if (!selectedAuthor) return []
-
-    return classicBooks
-      .filter(b => b.author === selectedAuthor)
+    return books
+      .filter(b => b.author === globalAuthor)
       .sort((a, b) => {
         const aKey = (a.readingYear ?? 0) * 100 + (a.readingMonth ?? 0)
         const bKey = (b.readingYear ?? 0) * 100 + (b.readingMonth ?? 0)
         return bKey - aKey
       })
-  }, [selectedAuthor, classicBooks])
+  }, [books, globalAuthor])
 
-  /* ================= BACK ================= */
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+
   const goBack = () => {
-    if (view === 'books') {
-      setView('authors')
-      setSelectedAuthor(null)
-    }
-    else if (view === 'authors') {
-      setView('genres')
-      setSelectedGenre(null)
-    }
-    else if (view === 'classics') {
-      if (selectedAuthor) {
-        setSelectedAuthor(null)
+    if (view === 'authorsAll') {
+      if (globalAuthor) {
+        setGlobalAuthor(null)
+      } else {
+        setView('home')
+        setLetterFilter(null)
+        setSearchAuthor('')
+      }
+    } else if (view === 'periods') {
+      if (selectedPeriod) {
+        setSelectedPeriod(null)
       } else {
         setView('home')
       }
-    }
-    else {
+    } else {
       setView('home')
     }
   }
 
   const renderBookList = (list: Book[]) => (
     <>
-      <div style={styles.metaLine}>
-        📖 {list.length} libri
-      </div>
+      <div style={styles.metaLine}>📖 {list.length} libri</div>
 
       {list.map(b => {
         const month = b.readingMonth
@@ -172,9 +192,13 @@ export default function Explore() {
         </button>
       )}
 
-      {/* HOME */}
       {view === 'home' && (
         <div style={styles.homeGrid}>
+          <div style={styles.card3d} onClick={() => setView('authorsAll')}>
+            <div style={styles.cardTitle}>👤 Autori</div>
+            <div style={styles.cardDesc}>Esplora gli autori</div>
+          </div>
+
           <div style={styles.card3d} onClick={() => setView('genres')}>
             <div style={styles.cardTitle}>📚 Generi</div>
             <div style={styles.cardDesc}>Esplora i libri per categoria</div>
@@ -184,71 +208,145 @@ export default function Explore() {
             <div style={styles.cardTitle}>🏛️ Classici</div>
             <div style={styles.cardDesc}>Autori e opere classiche</div>
           </div>
+
+          <div style={styles.card3d} onClick={() => setView('periods')}>
+            <div style={styles.cardTitle}>⏳ Periodi storici</div>
+            <div style={styles.cardDesc}>Esplora per epoca</div>
+          </div>
         </div>
       )}
 
-      {/* GENERI */}
-      {view === 'genres' && (
+      {view === 'periods' && !selectedPeriod && (
         <div style={styles.stack}>
-          {genres.map(g => (
+          {periods.map(([period, list]) => (
             <div
-              key={g}
+              key={period}
               style={styles.rowCard}
-              onClick={() => {
-                setSelectedGenre(g)
-                setView('authors')
-              }}
+              onClick={() => setSelectedPeriod(period)}
             >
-              <div style={styles.rowLeft}>
-                <span>{genreIcons[g] || '📚'}</span>
-                <span style={styles.rowTitle}>{g}</span>
+              <span style={styles.rowTitle}>{period}</span>
+              <span style={styles.pill}>{list.length}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ⭐ SOLO SEZIONE PERIODI MODIFICATA */}
+      {view === 'periods' && selectedPeriod && (
+        <div>
+          <div style={styles.metaLine}>
+            📖 {booksByPeriod.length} libri
+          </div>
+
+          {booksByPeriod.map(b => {
+            const month = b.readingMonth
+              ? MONTHS[b.readingMonth - 1]
+              : ''
+
+            return (
+              <div key={b.id} style={styles.bookCard}>
+                <div style={styles.bookTitle}>{b.title}</div>
+
+                <div style={{ fontSize: 12, color: '#6b7280' }}>
+                  {b.author} · {b.publicationYear ?? '—'}
+                </div>
+
+                {month && b.readingYear && (
+                  <div style={styles.readingMeta}>
+                    📅 {month} {b.readingYear}
+                  </div>
+                )}
               </div>
-              <span style={styles.pill}>{genreCounts(g)}</span>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
-      {/* AUTORI (GENERI) */}
-      {view === 'authors' && selectedGenre && (
-        <div style={styles.stack}>
-          {authorsByGenre().map(([author, count]) => (
-            <div
-              key={author}
-              style={styles.rowCard}
+      {view === 'authorsAll' && !globalAuthor && (
+        <>
+          <div style={styles.statsCard}>
+            <div style={styles.statsBlock}>
+              <div style={styles.statsIcon}>📚</div>
+              <div>
+                <div style={styles.statsNumber}>{totalBooks}</div>
+                <div style={styles.statsLabel}>Libri</div>
+              </div>
+            </div>
+
+            <div style={styles.statsDivider} />
+
+            <div style={styles.statsBlock}>
+              <div style={styles.statsIcon}>✍️</div>
+              <div>
+                <div style={styles.statsNumber}>{totalAuthors}</div>
+                <div style={styles.statsLabel}>Autori</div>
+              </div>
+            </div>
+          </div>
+
+          <input
+            placeholder="Cerca autore..."
+            value={searchAuthor}
+            onChange={e => setSearchAuthor(e.target.value)}
+            style={styles.search}
+          />
+
+          <div style={styles.alphabet}>
+            {alphabet.map(l => (
+              <button
+                key={l}
+                onClick={() =>
+                  setLetterFilter(prev => (prev === l ? null : l))
+                }
+                style={{
+                  ...styles.letter,
+                  background: letterFilter === l ? '#4f46e5' : '#fff',
+                  color: letterFilter === l ? '#fff' : '#111'
+                }}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
+
+          {(searchAuthor || letterFilter) && (
+            <button
               onClick={() => {
-                setSelectedAuthor(author)
-                setView('books')
+                setSearchAuthor('')
+                setLetterFilter(null)
               }}
+              style={styles.resetLetters}
             >
-              <span style={styles.rowTitle}>{author}</span>
-              <span style={styles.pill}>{count}</span>
-            </div>
-          ))}
-        </div>
+              Tutti
+            </button>
+          )}
+
+          <div style={styles.stack}>
+            {groupedAuthors.map(([letter, authors]) => (
+              <div key={letter}>
+                <div style={styles.letterHeader}>{letter}</div>
+
+                {authors.map(a => (
+                  <div
+                    key={a.author}
+                    style={styles.rowCard}
+                    onClick={() => setGlobalAuthor(a.author)}
+                  >
+                    <span style={styles.rowTitle}>
+                      {a.surname}, {a.name}
+                    </span>
+                    <span style={styles.pill}>{a.count}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
-      {/* LIBRI (GENERI) */}
-      {view === 'books' && selectedAuthor && renderBookList(booksByAuthor)}
-
-      {/* CLASSICI AUTORI */}
-      {view === 'classics' && !selectedAuthor && (
-        <div style={styles.stack}>
-          {classicsByAuthor.map(([author, books]) => (
-            <div
-              key={author}
-              style={styles.rowCard}
-              onClick={() => setSelectedAuthor(author)}
-            >
-              <span style={styles.rowTitle}>{author}</span>
-              <span style={styles.pill}>{books.length}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* CLASSICI LIBRI */}
-      {view === 'classics' && selectedAuthor && renderBookList(classicsBySelectedAuthor)}
+      {view === 'authorsAll' && globalAuthor &&
+        renderBookList(booksByGlobalAuthor)
+      }
     </div>
   )
 }
@@ -257,83 +355,41 @@ export default function Explore() {
 
 const styles: Record<string, React.CSSProperties> = {
   container: { display: 'flex', flexDirection: 'column', gap: 12 },
-
-  title: { fontSize: 20, fontWeight: 800, color: '#111827' },
-
-  back: {
-    padding: '8px 10px',
-    borderRadius: 10,
-    border: '1px solid #ddd',
-    background: '#fff',
-    cursor: 'pointer',
-    width: 'fit-content'
-  },
-
-  homeGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: 12
-  },
-
-  card3d: {
-    padding: 16,
-    borderRadius: 16,
-    background: 'linear-gradient(145deg, #ffffff, #f9fafb)',
-    border: '1px solid rgba(229,231,235,0.8)',
-    boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
-    cursor: 'pointer'
-  },
-
+  title: { fontSize: 20, fontWeight: 800 },
+  back: { padding: '8px 10px', borderRadius: 10, border: '1px solid #ddd', background: '#fff', cursor: 'pointer', width: 'fit-content' },
+  homeGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 },
+  card3d: { padding: 16, borderRadius: 16, background: 'linear-gradient(145deg, #ffffff, #f9fafb)', border: '1px solid rgba(229,231,235,0.8)', boxShadow: '0 10px 25px rgba(0,0,0,0.08)', cursor: 'pointer' },
   cardTitle: { fontSize: 16, fontWeight: 800 },
-
   cardDesc: { fontSize: 13, color: '#6b7280', marginTop: 4 },
-
+  statsCard: { display: 'flex', justifyContent: 'center', gap: 20, padding: 14, borderRadius: 16, background: '#fff', border: '1px solid #eee' },
+  statsBlock: { display: 'flex', gap: 10, alignItems: 'center' },
+  statsIcon: { fontSize: 20 },
+  statsNumber: { fontSize: 18, fontWeight: 800 },
+  statsLabel: { fontSize: 11, color: '#6b7280' },
+  statsDivider: { width: 1, background: '#eee' },
+  search: { padding: 10, border: '1px solid #ddd', borderRadius: 10 },
+  alphabet: { display: 'flex', flexWrap: 'wrap', gap: 6 },
+  letter: { padding: '4px 8px', borderRadius: 8, border: '1px solid #ddd', cursor: 'pointer' },
   stack: { display: 'flex', flexDirection: 'column', gap: 10 },
-
-  rowCard: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    padding: 14,
-    borderRadius: 14,
-    background: '#fff',
-    border: '1px solid #eee',
-    cursor: 'pointer'
-  },
-
-  rowLeft: { display: 'flex', gap: 10, alignItems: 'center' },
-
+  rowCard: { display: 'flex', justifyContent: 'space-between', padding: 14, borderRadius: 14, border: '1px solid #eee', background: '#fff', cursor: 'pointer' },
   rowTitle: { fontSize: 14, fontWeight: 700 },
+  pill: { fontSize: 11, background: '#eef2ff', padding: '2px 10px', borderRadius: 999, fontWeight: 600, color: '#4f46e5' },
+  bookCard: { padding: 12, borderRadius: 12, border: '1px solid #eee', background: '#fff' },
+  bookTitle: { fontSize: 14, fontWeight: 600 },
+  readingMeta: { fontSize: 11, color: '#9ca3af', marginTop: 4 },
+  metaLine: { fontSize: 12, color: '#6b7280', marginBottom: 6 },
 
-  pill: {
-    fontSize: 11,
-    background: '#eef2ff',
-    padding: '2px 10px',
+  resetLetters: {
+    marginTop: 12,
+    padding: '10px 14px',
     borderRadius: 999,
-    fontWeight: 600,
-    color: '#4f46e5'
-  },
-
-  bookCard: {
-    padding: 12,
-    borderRadius: 12,
-    background: '#fff',
-    border: '1px solid #eee'
-  },
-
-  bookTitle: { fontWeight: 600, fontSize: 14 },
-
-  readingMeta: {
-    fontSize: 11,
-    color: '#9ca3af',
-    marginTop: 4,
-    display: 'flex',
-    alignItems: 'center',
-    gap: 6
-  },
-
-  metaLine: {
+    border: 'none',
+    background: 'linear-gradient(145deg, #4f46e5, #6366f1)',
+    color: '#fff',
     fontSize: 12,
-    color: '#6b7280',
-    marginBottom: 6
+    fontWeight: 700,
+    cursor: 'pointer',
+    alignSelf: 'flex-start',
+    boxShadow: '0 8px 18px rgba(79,70,229,0.25)'
   }
 }
