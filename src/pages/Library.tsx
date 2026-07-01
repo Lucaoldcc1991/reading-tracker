@@ -87,8 +87,6 @@ export default function Library() {
     loadBooks()
   }
 
-  /* ================= SWIPE ================= */
-
   const swipeState: Record<number, {
     startX: number
     currentX: number
@@ -202,7 +200,6 @@ export default function Library() {
               key={book.id}
               style={styles.swipeWrapper}
             >
-              {/* ACTIONS */}
               <div style={styles.actionsBehind}>
                 <button
                   style={styles.edit}
@@ -219,7 +216,6 @@ export default function Library() {
                 </button>
               </div>
 
-              {/* CARD */}
               <div
                 style={{
                   ...styles.card,
@@ -272,8 +268,7 @@ export default function Library() {
   )
 }
 
-/* ================= STILI ================= */
-
+/* STILI */
 const styles: Record<string, React.CSSProperties> = {
   container: {
     display: 'flex',
@@ -281,15 +276,9 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '12px'
   },
 
-  title: {
-    fontSize: '20px',
-    fontWeight: 700
-  },
+  title: { fontSize: '20px', fontWeight: 700 },
 
-  counter: {
-    fontSize: '13px',
-    color: '#6b7280'
-  },
+  counter: { fontSize: '13px', color: '#6b7280' },
 
   search: {
     padding: '12px 14px',
@@ -377,6 +366,7 @@ const styles: Record<string, React.CSSProperties> = {
   modalOverlay: {
     position: 'fixed',
     inset: 0,
+    zIndex: 9999,
     background: 'rgba(0,0,0,0.4)',
     display: 'flex',
     justifyContent: 'center',
