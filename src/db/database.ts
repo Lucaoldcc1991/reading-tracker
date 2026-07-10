@@ -12,6 +12,7 @@ export type Book = {
   genre: string
   series?: string
   country?: string
+  cover?: string
   publisher?: string
   publicationYear?: number
   pages: number
@@ -51,6 +52,13 @@ class AppDatabase extends Dexie {
     })
 
     this.version(2).stores({
+      books:
+        '++id, title, author, genre, country, series, pages, readingYear, createdAt',
+      wishlist:
+        '++id, title, author, genre, createdAt'
+    })
+
+    this.version(3).stores({
       books:
         '++id, title, author, genre, country, series, pages, readingYear, createdAt',
       wishlist:
