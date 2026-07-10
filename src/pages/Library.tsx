@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { db } from '../db/database'
 import BookForm from '../components/BookForm'
 import { COUNTRIES } from '../utils/countries'
@@ -87,46 +87,62 @@ export default function Library() {
     loadBooks()
   }
 
-  const swipeState: Record<number, {
+  const swipeState = useRef<Record<number, {
     startX: number
-    currentX: number
+    startY: number
     offset: number
-  }> = {}
+    swiping: boolean
+  }>>({})
 
-  const handleTouchStart = (e: any, id?: number) => {
+  const handleTouchStart = (e: React.TouchEvent, id?: number) => {
     if (!id) return
-    setOpenSwipeId(id)
-
-    swipeState[id] = {
+    
+    swipeState.current[id] = {
       startX: e.touches[0].clientX,
-      currentX: 0,
-      offset: 0
+      startY: e.touches[0].clientY,
+      offset: 0,
+      swiping: false
     }
   }
 
-  const handleTouchMove = (e: any, id?: number) => {
-    if (!id || !swipeState[id]) return
+  const handleTouchMove = (e: React.TouchEvent, id?: number) => {
+    if (!id) return
 
-    const deltaX =
-      e.touches[0].clientX - swipeState[id].startX
+    const state = swipeState.current[id]
+    if (!state) return
 
-    if (deltaX < 0) {
-      swipeState[id].offset = Math.max(deltaX, -120)
-    }
+     const deltaX = e.touches[0].clientX - state.startX
+     const deltaY = e.touches[0].clientY - state.startY
+
+     // Se il movimento è principalmente verticale,
+     // lascia scorrere normalmente la pagina.
+     if (Math.abs(deltaY) > Math.abs(deltaX)) return
+
+     // Ignora piccoli movimenti orizzontali
+     if (!state.swiping && Math.abs(deltaX) < 25) return
+
+     state.swiping = true
+
+     if (deltaX < 0) {
+      state.offset = Math.max(deltaX, -120)
+     } else { 
+       state.offset = 0
+     }
   }
 
   const handleTouchEnd = (id?: number) => {
-    if (!id || !swipeState[id]) return
+    if (!id) return
 
-    const offset = swipeState[id].offset
+  const state = swipeState.current[id]
+    if (!state) return
 
-    if (offset < -60) {
-      swipeState[id].offset = -120
+    if (state.offset < -90) {
       setOpenSwipeId(id)
     } else {
-      swipeState[id].offset = 0
       setOpenSwipeId(null)
     }
+
+    delete swipeState.current[id]
   }
 
   const getOffset = (id?: number) => {
@@ -325,7 +341,8 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '18px',
     background: '#fff',
     border: '1px solid #eee',
-    transition: 'transform 0.2s ease'
+    transition: 'transform 0.2s ease',
+    touchAction: 'pan-y'
   },
 
   info: {
