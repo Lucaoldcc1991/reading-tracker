@@ -9,6 +9,12 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
 
+      includeAssets: [
+        'apple-touch-icon.png',
+        'icon-1024.png',
+        'icons.svg'
+      ],
+
       manifest: {
         name: 'Reading Tracker',
         short_name: 'Reading Tracker',
@@ -20,21 +26,23 @@ export default defineConfig({
 
         icons: [
           {
-            src: '/pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
+            src: '/icon-1024.png',
+            sizes: '1024x1024',
+            type: 'image/png',
+            purpose: 'any maskable'
           },
           {
-            src: '/pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
+            src: '/apple-touch-icon.png',
+            sizes: '180x180',
+            type: 'image/png',
+            purpose: 'any'
           }
         ]
       },
 
       workbox: {
         globPatterns: [
-          '**/*.{js,css,html,ico,png,svg,woff,woff2}'
+          '**/*.{js,css,html,ico,png,svg,webmanifest}'
         ]
       }
     })
