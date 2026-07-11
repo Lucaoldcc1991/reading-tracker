@@ -25,6 +25,81 @@ const MONTHS = [
   'Settembre','Ottobre','Novembre','Dicembre'
 ]
 
+const INK = '#2B2118'
+const PAPER = '#FBF7F1'
+const PAPER_MUTED = '#F3EDE3'
+
+/* Colori "generici" di interfaccia (non legati al genere) */
+const UI_TEAL = { from: '#1B4B43', to: '#0F332D', soft: '#E4EFEC' }
+const UI_RED_SOFT = '#FDE8E8'
+
+type GenreColor = { from: string; to: string; soft: string }
+
+/* ================= COLORE PER GENERE =================
+   Ogni famiglia di generi ha un colore fisso e riconoscibile,
+   così il dorso del libro comunica subito il tipo di lettura. */
+const GENRE_COLOR_MAP: { match: string[]; color: GenreColor }[] = [
+  { // Giallo / Noir / Legal → giallo
+    match: ['giallo', 'noir', 'legal'],
+    color: { from: '#D4AC0D', to: '#A17E09', soft: '#FBF1CC' }
+  },
+  { // Thriller → blu
+    match: ['thriller'],
+    color: { from: '#1D4ED8', to: '#173F9E', soft: '#DCE6FB' }
+  },
+  { // Horror / Gotico / Paranormale → viola
+    match: ['horror', 'gotic', 'paranormal'],
+    color: { from: '#6D28D9', to: '#4C1D95', soft: '#E9E1FB' }
+  },
+  { // Realista / Psicologico / Filosofico → rosso
+    match: ['realis', 'psicolog', 'filosof'],
+    color: { from: '#B91C1C', to: '#7F1414', soft: '#FBE0E0' }
+  },
+  { // Narrativa per ragazzi → azzurro
+    match: ['ragazz'],
+    color: { from: '#2E9CE0', to: '#1D6FA8', soft: '#DDEFFB' }
+  },
+  { // Saggio / Saggistica → verde fosforescente
+    match: ['saggi'],
+    color: { from: '#2EE86B', to: '#159244', soft: '#E1FAEA' }
+  },
+  { // Fumetto / Graphic novel → azzurro chiaro
+    match: ['fumett', 'graphic', 'manga'],
+    color: { from: '#7DD3FC', to: '#38A9DE', soft: '#EAF7FE' }
+  },
+  { // Storico / Formazione / Autobiografico → marrone
+    match: ['storic', 'formazione', 'autobiograf'],
+    color: { from: '#8B5E34', to: '#5E3D1F', soft: '#F1E6D8' }
+  },
+  { // Fantascienza → verde acqua
+    match: ['fantascienza', 'sci-fi', 'sci fi'],
+    color: { from: '#14B8A6', to: '#0D7A6F', soft: '#DBF5F2' }
+  },
+  { // Fantasy → arancione fosforescente
+    match: ['fantasy'],
+    color: { from: '#FF8A00', to: '#C96500', soft: '#FFEBD1' }
+  },
+  { // Avventura → verde salvia
+    match: ['avventura'],
+    color: { from: '#8FAE7D', to: '#66815A', soft: '#EAF1E5' }
+  },
+  { // Distopico → nero
+    match: ['distopi'],
+    color: { from: '#1F2328', to: '#000000', soft: '#E7E7E7' }
+  }
+]
+
+const GENRE_FALLBACK: GenreColor = { from: '#8A7B68', to: '#5C4E3D', soft: PAPER_MUTED }
+
+const genreColorFor = (genre?: string): GenreColor => {
+  if (!genre) return GENRE_FALLBACK
+  const g = genre.toLowerCase()
+  const found = GENRE_COLOR_MAP.find(entry =>
+    entry.match.some(keyword => g.includes(keyword))
+  )
+  return found ? found.color : GENRE_FALLBACK
+}
+
 export default function Library() {
   const [books, setBooks] = useState<Book[]>([])
   const [search, setSearch] = useState('')
@@ -163,7 +238,7 @@ export default function Library() {
   }
     return (
     <div style={styles.container}>
-      <h2 style={styles.title}>📚 Libreria</h2>
+      <h2 style={styles.title}>La tua libreria</h2>
 
       <div style={styles.counter}>
         📖 {filteredBooks.length} libri
@@ -230,6 +305,7 @@ export default function Library() {
             book.readingMonth &&
             MONTHS[book.readingMonth - 1]
 
+          const spine = genreColorFor(book.genre)
 
           return (
 
@@ -263,6 +339,7 @@ export default function Library() {
 
                 style={{
                   ...styles.card,
+                  borderLeft: `4px solid ${spine.from}`,
                   transform:
                     `translateX(${getOffset(book.id)}px)`
                 }}
@@ -296,7 +373,13 @@ export default function Library() {
 
                 ) : (
 
-                  <div style={styles.coverPlaceholder}>
+                  <div
+                    style={{
+                      ...styles.coverPlaceholder,
+                      background: spine.soft,
+                      color: spine.from
+                    }}
+                  >
                     📕
                   </div>
 
@@ -312,7 +395,7 @@ export default function Library() {
 
 
                   <p style={styles.meta}>
-                    {book.author} · {book.genre}
+                    {book.author} · <span style={{ color: spine.from, fontWeight: 700 }}>{book.genre}</span>
                   </p>
 
 
@@ -325,7 +408,7 @@ export default function Library() {
                   {book.series && (
 
                     <p style={styles.series}>
-                      {book.series}
+                      📖 {book.series}
                     </p>
 
                   )}
@@ -338,14 +421,17 @@ export default function Library() {
 
 
 
-                  <p style={styles.reading}>
+                  {monthName && book.readingYear && (
 
-                    {monthName && book.readingYear
-                      ? `📅 ${monthName} ${book.readingYear}`
-                      : ''}
+                    <p style={styles.reading}>
+                      📅 {monthName} {book.readingYear}
+                    </p>
 
-                  </p>
+                  )}
 
+                  {book.classic && (
+                    <span style={styles.classicIcon}>🏛️</span>
+                  )}
 
                 </div>
 
@@ -357,6 +443,13 @@ export default function Library() {
           )
 
         })}
+
+        {filteredBooks.length === 0 && (
+          <div style={styles.emptyState}>
+            <p style={styles.emptyIcon}>📚</p>
+            <p style={styles.emptyText}>Nessun libro trovato.</p>
+          </div>
+        )}
 
       </div>
 
@@ -372,38 +465,51 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px'
+    gap: '12px',
+    background: PAPER,
+    padding: '4px 2px 20px'
   },
 
 
   title: {
-    fontSize: '20px',
-    fontWeight: 700
+    fontSize: '22px',
+    fontWeight: 700,
+    fontFamily: 'Georgia, "Iowan Old Style", serif',
+    color: INK,
+    margin: 0
   },
 
 
   counter: {
-    fontSize: '13px',
-    color: '#6b7280'
+    fontSize: '12px',
+    fontWeight: 600,
+    color: '#8A7B68',
+    textTransform: 'uppercase',
+    letterSpacing: '0.8px'
   },
 
 
   search: {
     padding: '12px 14px',
     borderRadius: '14px',
-    border: '1px solid #eee'
+    border: `1px solid ${PAPER_MUTED}`,
+    background: '#fff',
+    color: INK,
+    fontSize: '14px'
   },
 
 
   add: {
-  padding: '10px',
-  borderRadius: '10px',
-  border: 'none',
-  background: '#eef2ff',
-  fontWeight: 700,
-  cursor: 'pointer',
-  boxShadow: '0 4px 10px rgba(99,102,241,0.15)'
-},
+    padding: '12px',
+    borderRadius: '14px',
+    border: 'none',
+    background: `linear-gradient(145deg, ${UI_TEAL.from}, ${UI_TEAL.to})`,
+    color: '#fff',
+    fontWeight: 700,
+    fontSize: '14px',
+    cursor: 'pointer',
+    boxShadow: '0 8px 18px rgba(27,75,67,0.25)'
+  },
 
 
   list: {
@@ -429,7 +535,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     justifyContent: 'space-around',
     alignItems: 'center',
-    background: '#fef2f2'
+    background: UI_RED_SOFT
   },
     card: {
     display: 'flex',
@@ -438,7 +544,8 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '14px',
     borderRadius: '18px',
     background: '#fff',
-    border: '1px solid #eee',
+    border: `1px solid ${PAPER_MUTED}`,
+    boxShadow: '0 4px 12px rgba(43,33,24,0.05)',
     transition: 'transform 0.2s ease',
     touchAction: 'pan-y'
   },
@@ -449,7 +556,7 @@ const styles: Record<string, React.CSSProperties> = {
     height: '90px',
     objectFit: 'cover',
     borderRadius: '8px',
-    border: '1px solid #ddd',
+    border: `1px solid ${PAPER_MUTED}`,
     flexShrink: 0
   },
 
@@ -458,8 +565,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: '60px',
     height: '90px',
     borderRadius: '8px',
-    border: '1px solid #ddd',
-    background: '#f3f4f6',
+    border: '1px solid rgba(0,0,0,0.06)',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
@@ -472,53 +578,66 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: 4,
-    flex: 1
+    flex: 1,
+    position: 'relative'
   },
 
 
   titleBook: {
-    fontWeight: 700
+    fontWeight: 700,
+    color: INK,
+    fontFamily: 'Georgia, "Iowan Old Style", serif',
+    fontSize: '15px',
+    margin: 0
   },
 
 
   meta: {
     fontSize: 13,
-    color: '#6b7280'
+    color: '#6b6152',
+    margin: 0
   },
 
 
   countryRow: {
-    fontSize: 13
+    fontSize: 13,
+    color: '#6b6152',
+    margin: 0
   },
 
 
   series: {
-    fontSize: 13,
-    fontStyle: 'italic'
+    fontSize: 12,
+    fontStyle: 'italic',
+    color: '#8A7B68',
+    margin: 0
   },
 
 
   reading: {
     fontSize: 11,
-    color: '#16a34a',
-    fontWeight: 700
+    color: UI_TEAL.from,
+    fontWeight: 700,
+    margin: 0
   },
 
 
   edit: {
     background: '#fff',
-    border: '1px solid #ddd',
+    border: `1px solid ${PAPER_MUTED}`,
     padding: 10,
-    borderRadius: 10
+    borderRadius: 10,
+    cursor: 'pointer'
   },
 
 
   delete: {
-    background: '#fee2e2',
-    border: '1px solid #fca5a5',
+    background: '#fde8e8',
+    border: '1px solid #f0b8b8',
     padding: 10,
     borderRadius: 10,
-    color: '#991b1b'
+    color: '#8f2e2e',
+    cursor: 'pointer'
   },
 
 
@@ -526,10 +645,36 @@ const styles: Record<string, React.CSSProperties> = {
     position: 'fixed',
     inset: 0,
     zIndex: 9999,
-    background: 'rgba(0,0,0,0.4)',
+    background: 'rgba(43,33,24,0.45)',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center'
+  },
+
+  classicIcon: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    fontSize: '16px'
+  },
+
+  emptyState: {
+    padding: '32px 16px',
+    textAlign: 'center',
+    borderRadius: '18px',
+    background: '#fff',
+    border: `1px dashed ${PAPER_MUTED}`
+  },
+
+  emptyIcon: {
+    fontSize: '28px',
+    margin: 0
+  },
+
+  emptyText: {
+    fontSize: '13px',
+    color: '#8A7B68',
+    marginTop: '6px'
   }
 
 }

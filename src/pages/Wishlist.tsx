@@ -24,6 +24,12 @@ const genres = [
   'Distopico'
 ]
 
+const INK = '#2B2118'
+const PAPER = '#FBF7F1'
+const PAPER_MUTED = '#F3EDE3'
+const TEAL_FROM = '#1B4B43'
+const TEAL_TO = '#0F332D'
+
 export default function Wishlist() {
   const [items, setItems] = useState<WishlistItem[]>([])
   const [title, setTitle] = useState('')
@@ -77,14 +83,15 @@ export default function Wishlist() {
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.header}>⭐ Wishlist</h2>
-
-      <p style={styles.counter}>
-        Libri in lista: {items.length}
+      <h2 style={styles.header}>La tua wishlist</h2>
+      <p style={styles.eyebrow}>
+        {items.length === 0 ? 'Ancora nessun libro in lista' : `${items.length} ${items.length === 1 ? 'libro in lista' : 'libri in lista'}`}
       </p>
 
       {/* FORM */}
       <div style={styles.form}>
+        <p style={styles.formTitle}>Aggiungi un desiderio</p>
+
         <input
           placeholder="Titolo libro"
           value={title}
@@ -111,57 +118,70 @@ export default function Wishlist() {
         </select>
 
         <button onClick={addItem} style={styles.add}>
-          + Aggiungi
+          + Aggiungi alla wishlist
         </button>
       </div>
 
       {/* SEARCH */}
-      <input
-        placeholder="Cerca..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={styles.search}
-      />
+      {items.length > 0 && (
+        <input
+          placeholder="Cerca nella wishlist..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={styles.search}
+        />
+      )}
 
-      {/* LISTA */}
+      {/* LISTA — volutamente neutra: cambia spesso, niente colori per genere */}
       <div style={styles.list}>
         {filtered.map((item) => (
           <div key={item.id} style={styles.card}>
 
             <div style={styles.info}>
-
-              {/* TITOLO → NON PIÙ INVADENTE */}
               <p style={styles.titleBook}>
                 {item.title}
               </p>
 
-              {/* METADATI PIÙ DISCRETI */}
               <p style={styles.meta}>
                 {item.author}
               </p>
 
-              <p style={styles.metaSoft}>
+              <span style={styles.genreTag}>
                 {item.genre}
-              </p>
-
+              </span>
             </div>
 
             <button
               onClick={() => removeItem(item.id)}
               style={styles.delete}
+              aria-label="Rimuovi dalla wishlist"
             >
               ✕
             </button>
 
           </div>
         ))}
+
+        {items.length > 0 && filtered.length === 0 && (
+          <div style={styles.emptyState}>
+            <p style={styles.emptyIcon}>🔍</p>
+            <p style={styles.emptyText}>Nessun risultato per questa ricerca.</p>
+          </div>
+        )}
+
+        {items.length === 0 && (
+          <div style={styles.emptyState}>
+            <p style={styles.emptyIcon}>⭐</p>
+            <p style={styles.emptyText}>La tua wishlist è vuota.<br />Aggiungi il primo libro qui sopra.</p>
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
 /* =========================
-   STILE 3D COERENTE APP
+   STILE COERENTE CON L'APP
 ========================= */
 
 const styles: Record<string, React.CSSProperties> = {
@@ -169,54 +189,75 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px'
+    gap: '12px',
+    background: PAPER,
+    padding: '4px 2px 20px'
   },
 
   header: {
-    fontSize: '20px',
+    fontSize: '22px',
     fontWeight: 700,
-    color: '#111827'
+    fontFamily: 'Georgia, "Iowan Old Style", serif',
+    color: INK,
+    margin: 0
   },
 
-  counter: {
-    fontSize: '13px',
-    color: '#6b7280'
+  eyebrow: {
+    fontSize: '12px',
+    fontWeight: 600,
+    color: '#8A7B68',
+    textTransform: 'uppercase',
+    letterSpacing: '1px',
+    margin: 0
   },
 
   form: {
     display: 'flex',
     flexDirection: 'column',
     gap: '10px',
-    padding: '12px',
-    borderRadius: '14px',
+    padding: '16px',
+    borderRadius: '18px',
     background: '#fff',
-    border: '1px solid #e5e7eb',
-    boxShadow: '0 6px 18px rgba(0,0,0,0.06)'
+    border: `1px solid ${PAPER_MUTED}`,
+    boxShadow: '0 8px 20px rgba(43,33,24,0.06)'
+  },
+
+  formTitle: {
+    fontSize: '13px',
+    fontWeight: 700,
+    color: INK,
+    margin: '0 0 2px 0'
   },
 
   input: {
-    padding: '10px',
-    borderRadius: '10px',
-    border: '1px solid #e5e7eb',
-    background: '#fff',
-    boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.04)'
+    padding: '12px',
+    borderRadius: '12px',
+    border: `1px solid ${PAPER_MUTED}`,
+    background: PAPER,
+    color: INK,
+    fontSize: '14px'
   },
 
   add: {
-    padding: '10px',
-    borderRadius: '10px',
+    marginTop: '4px',
+    padding: '12px',
+    borderRadius: '12px',
     border: 'none',
-    background: '#eef2ff',
+    background: `linear-gradient(145deg, ${TEAL_FROM}, ${TEAL_TO})`,
+    color: '#fff',
     fontWeight: 700,
+    fontSize: '14px',
     cursor: 'pointer',
-    boxShadow: '0 4px 10px rgba(99,102,241,0.15)'
+    boxShadow: '0 8px 18px rgba(27,75,67,0.25)'
   },
 
   search: {
-    padding: '10px',
-    borderRadius: '10px',
-    border: '1px solid #e5e7eb',
-    boxShadow: '0 3px 10px rgba(0,0,0,0.05)'
+    padding: '12px 14px',
+    borderRadius: '14px',
+    border: `1px solid ${PAPER_MUTED}`,
+    background: '#fff',
+    color: INK,
+    fontSize: '14px'
   },
 
   list: {
@@ -225,47 +266,82 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '10px'
   },
 
-  /* CARD 3D */
+  /* Card volutamente neutra e discreta: la wishlist cambia spesso,
+     non vale la pena colorarla per genere come in Libreria/Esplora. */
   card: {
     display: 'flex',
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
     padding: '14px',
     borderRadius: '14px',
-    border: '1px solid #e5e7eb',
+    border: `1px solid ${PAPER_MUTED}`,
     background: '#fff',
-    boxShadow: '0 6px 14px rgba(0,0,0,0.08)',
-    transition: 'all 0.2s ease'
+    boxShadow: '0 4px 12px rgba(43,33,24,0.05)'
   },
 
   info: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '3px'
+    gap: '5px'
   },
 
-  /* 👇 TITOLI MENO INVADENTI */
   titleBook: {
-    fontWeight: 600,      // ↓ da 700 a 600
-    fontSize: '14px',     // ↓ più piccolo
-    color: '#111827'
+    fontWeight: 700,
+    fontSize: '15px',
+    fontFamily: 'Georgia, "Iowan Old Style", serif',
+    color: INK,
+    margin: 0
   },
 
   meta: {
-    fontSize: '12px',
-    color: '#6b7280'
+    fontSize: '13px',
+    color: '#6b6152',
+    margin: 0
   },
 
-  metaSoft: {
+  genreTag: {
     fontSize: '11px',
-    color: '#9ca3af',
-    fontStyle: 'italic'
+    fontWeight: 600,
+    color: '#8A7B68',
+    background: PAPER_MUTED,
+    padding: '2px 9px',
+    borderRadius: '999px',
+    width: 'fit-content',
+    marginTop: '2px'
   },
 
   delete: {
     border: 'none',
-    background: 'transparent',
-    fontSize: '16px',
+    background: '#FDE8E8',
+    width: '28px',
+    height: '28px',
+    borderRadius: '999px',
+    fontSize: '13px',
     cursor: 'pointer',
-    color: '#ef4444'
+    color: '#8f2e2e',
+    flexShrink: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+
+  emptyState: {
+    padding: '32px 16px',
+    textAlign: 'center',
+    borderRadius: '18px',
+    background: '#fff',
+    border: `1px dashed ${PAPER_MUTED}`
+  },
+
+  emptyIcon: {
+    fontSize: '28px',
+    margin: 0
+  },
+
+  emptyText: {
+    fontSize: '13px',
+    color: '#8A7B68',
+    marginTop: '6px',
+    lineHeight: 1.5
   }
 }
