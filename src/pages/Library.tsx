@@ -238,7 +238,7 @@ export default function Library() {
   }
     return (
     <div style={styles.container}>
-      <h2 style={styles.title}>La tua libreria</h2>
+      <h2 style={styles.title}>📚 Libri letti</h2>
 
       <div style={styles.counter}>
         📖 {filteredBooks.length} libri

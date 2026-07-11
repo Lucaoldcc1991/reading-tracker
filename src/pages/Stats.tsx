@@ -164,7 +164,7 @@ export default function Stats() {
         <span style={{ ...styles.shelfBar, background: SPINES.plum.from }} />
       </div>
 
-      <h2 style={styles.header}>Statistiche</h2>
+      <h2 style={styles.header}>📊 Statistiche</h2>
       <p style={styles.eyebrow}>Panoramica completa</p>
 
       <div style={styles.grid}>

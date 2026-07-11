@@ -106,7 +106,7 @@ export default function Home() {
         <span style={{ ...styles.shelfBar, background: SPINES.plum.from }} />
       </div>
 
-      <h2 style={styles.header}>La tua libreria</h2>
+      <h2 style={styles.header}>🏠 Home</h2>
       <p style={styles.eyebrow}>Anno {currentYear}</p>
 
       <h3 style={styles.sectionTitle}>Letture di quest’anno</h3>
@@ -123,22 +123,22 @@ export default function Home() {
       {/* Sezione generi / paesi */}
       <div style={styles.insightCard}>
         <div style={styles.sectionCard}>
-          <h3 style={styles.sectionTitleSmall}>📚 Generi letti</h3>
-          {topGenresThisYear.slice(0, 3).map(([genre, count], i) => (
+          <h3 style={styles.sectionTitleSmall}>📚 Libri letti per genere</h3>
+          {topGenresThisYear.map(([genre, count], i) => (
             <RankRow
               key={genre}
               rank={i + 1}
               label={genre}
               count={count}
-              isLast={i === Math.min(2, topGenresThisYear.length - 1)}
+              isLast={i === topGenresThisYear.length - 1}
             />
           ))}
           {topGenresThisYear.length === 0 && <p style={styles.emptyText}>Nessun genere ancora registrato.</p>}
         </div>
 
         <div style={styles.sectionCard}>
-          <h3 style={styles.sectionTitleSmall}>🌍 Paesi letti</h3>
-          {topCountriesThisYear.slice(0, 3).map(([country, count], i) => {
+          <h3 style={styles.sectionTitleSmall}>🌍 Libri letti per Paese</h3>
+          {topCountriesThisYear.map(([country, count], i) => {
             const c = COUNTRIES.find(x => x.name === country)
             return (
               <RankRow
@@ -146,7 +146,7 @@ export default function Home() {
                 rank={i + 1}
                 label={`${c?.flag ?? ''} ${country}`}
                 count={count}
-                isLast={i === Math.min(2, topCountriesThisYear.length - 1)}
+                isLast={i === topCountriesThisYear.length - 1}
               />
             )
           })}

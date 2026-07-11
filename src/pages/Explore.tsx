@@ -1,3 +1,4 @@
+// Explore.tsx
 import { useEffect, useState, useMemo } from 'react'
 import { db } from '../db/database'
 import { COUNTRIES } from '../utils/countries'
@@ -57,10 +58,6 @@ const GOLD: Accent     = { from: '#C08A28', to: '#8F661C', soft: '#F6EEDD' }
 const PLUM: Accent     = { from: '#4A3B6B', to: '#332748', soft: '#EBE7F1' }
 const SAGE: Accent     = { from: '#8FAE7D', to: '#66815A', soft: '#EAF1E5' }
 const SKY: Accent      = { from: '#2E9CE0', to: '#1D6FA8', soft: '#DDEFFB' }
-
-// Rotazione usata per liste "neutre" (periodi, serie, paesi)
-const ROTATION = [TEAL, BURGUNDY, GOLD, PLUM, SAGE, SKY]
-const accentAt = (i: number) => ROTATION[i % ROTATION.length]
 
 /* ================= COLORE PER GENERE =================
    Stessa mappa usata nella Libreria: ogni famiglia di generi
@@ -154,9 +151,7 @@ export default function Explore() {
 
   const booksBySeries = useMemo(() => {
     if (!selectedSeries) return []
-    return books
-      .filter(b => b.series === selectedSeries)
-      .sort((a, b) => a.title.localeCompare(b.title))
+    return books.filter(b => b.series === selectedSeries)
   }, [books, selectedSeries])
 
   /* 🌍 RAGGRUPPAMENTO PAESI */
@@ -262,14 +257,7 @@ export default function Explore() {
 
   const booksByGlobalAuthor = useMemo(() => {
     if (!globalAuthor) return []
-
-    return books
-      .filter(b => b.author === globalAuthor)
-      .sort((a, b) => {
-        const aKey = (a.readingYear ?? 0) * 100 + (a.readingMonth ?? 0)
-        const bKey = (b.readingYear ?? 0) * 100 + (b.readingMonth ?? 0)
-        return bKey - aKey
-      })
+    return books.filter(b => b.author === globalAuthor)
   }, [books, globalAuthor])
 
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
@@ -314,42 +302,51 @@ export default function Explore() {
 
   // Renderizzatore universale e pulito per TUTTE le schede (Generi, Classici, Periodi, Autori, Serie, Paesi)
   // Ogni libro prende il colore del proprio genere, come in Libreria.
-  const renderCleanBookList = (list: Book[]) => (
-    <div>
-      <div style={styles.metaLine}>📖 {list.length} libri</div>
+  // Ordine sempre cronologico di lettura: il primo letto in cima, il più recente in fondo.
+  const renderCleanBookList = (list: Book[]) => {
+    const sortedList = [...list].sort((a, b) => {
+      const aKey = (a.readingYear ?? 0) * 100 + (a.readingMonth ?? 0)
+      const bKey = (b.readingYear ?? 0) * 100 + (b.readingMonth ?? 0)
+      return aKey - bKey
+    })
 
-      {list.map(b => {
-        const month = b.readingMonth ? MONTHS[b.readingMonth - 1] : ''
-        const accent = genreColorFor(b.genre)
+    return (
+      <div>
+        <div style={styles.metaLine}>📖 {sortedList.length} libri</div>
 
-        return (
-          <div key={b.id} style={{ ...styles.bookCard, borderLeft: `4px solid ${accent.from}` }}>
-            {b.cover ? (
-              <img src={b.cover} alt={b.title} style={styles.cover} />
-            ) : (
-              <div style={{ ...styles.coverPlaceholder, background: accent.soft, color: accent.from }}>📕</div>
-            )}
+        {sortedList.map(b => {
+          const month = b.readingMonth ? MONTHS[b.readingMonth - 1] : ''
+          const accent = genreColorFor(b.genre)
 
-            <div style={styles.info}>
-              <div style={styles.bookTitle}>{b.title}</div>
-              <div style={{ fontSize: 12, color: '#6b6152', marginTop: 2 }}>
-                {b.author}
-              </div>
-              {month && b.readingYear && (
-                <div style={styles.readingMeta}>
-                  📅 {month} {b.readingYear}
-                </div>
+          return (
+            <div key={b.id} style={{ ...styles.bookCard, borderLeft: `4px solid ${accent.from}` }}>
+              {b.cover ? (
+                <img src={b.cover} alt={b.title} style={styles.cover} />
+              ) : (
+                <div style={{ ...styles.coverPlaceholder, background: accent.soft, color: accent.from }}>📕</div>
               )}
+
+              <div style={styles.info}>
+                <div style={styles.bookTitle}>{b.title}</div>
+                <div style={{ fontSize: 12, color: '#6b6152', marginTop: 2 }}>
+                  {b.author}
+                </div>
+                {month && b.readingYear && (
+                  <div style={styles.readingMeta}>
+                    📅 {month} {b.readingYear}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        )
-      })}
-    </div>
-  )
+          )
+        })}
+      </div>
+    )
+  }
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.title}>Esplora</h2>
+      <h2 style={styles.title}>🧭 Esplora</h2>
 
       {view !== 'home' && (
         <button style={styles.back} onClick={goBack}>
@@ -407,16 +404,21 @@ export default function Explore() {
       {/* ⏳ SEZIONE PERIODI STORICI */}
       {view === 'periods' && !selectedPeriod && (
         <div style={styles.stack}>
-          {periods.map(([period, list], i) => {
-            const accent = accentAt(i)
+          {periods.map(([period, list]) => {
+            const [years, ...descParts] = period.split(' · ')
+            const desc = descParts.join(' · ')
+
             return (
               <div
                 key={period}
-                style={{ ...styles.rowCard, borderLeft: `4px solid ${accent.from}` }}
+                style={styles.rowCard}
                 onClick={() => setSelectedPeriod(period)}
               >
-                <span style={styles.rowTitle}>{period}</span>
-                <span style={{ ...styles.pill, background: accent.soft, color: accent.from }}>{list.length}</span>
+                <span style={styles.periodLabel}>
+                  <span style={styles.periodYears}>{years}</span>
+                  {desc && <span style={styles.periodDesc}> · {desc}</span>}
+                </span>
+                <span style={styles.pill}>{list.length}</span>
               </div>
             )
           })}
@@ -436,19 +438,16 @@ export default function Explore() {
               <p style={styles.emptyText}>Nessuna serie registrata.</p>
             </div>
           )}
-          {seriesList.map(([series, list], i) => {
-            const accent = accentAt(i)
-            return (
-              <div
-                key={series}
-                style={{ ...styles.rowCard, borderLeft: `4px solid ${accent.from}` }}
-                onClick={() => setSelectedSeries(series)}
-              >
-                <span style={styles.rowTitle}>{series}</span>
-                <span style={{ ...styles.pill, background: accent.soft, color: accent.from }}>{list.length}</span>
-              </div>
-            )
-          })}
+          {seriesList.map(([series, list]) => (
+            <div
+              key={series}
+              style={styles.rowCard}
+              onClick={() => setSelectedSeries(series)}
+            >
+              <span style={styles.rowTitle}>{series}</span>
+              <span style={styles.pill}>{list.length}</span>
+            </div>
+          ))}
         </div>
       )}
 
@@ -590,8 +589,11 @@ const styles: Record<string, React.CSSProperties> = {
   alphabet: { display: 'flex', flexWrap: 'wrap', gap: 6 },
   letter: { padding: '4px 8px', borderRadius: 8, border: `1px solid ${PAPER_MUTED}`, cursor: 'pointer', fontSize: 12 },
   stack: { display: 'flex', flexDirection: 'column', gap: 10 },
-  rowCard: { display: 'flex', justifyContent: 'space-between', padding: 14, borderRadius: 14, border: `1px solid ${PAPER_MUTED}`, background: '#fff', cursor: 'pointer', boxShadow: '0 4px 12px rgba(43,33,24,0.05)' },
+  rowCard: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 14, borderRadius: 14, border: `1px solid ${PAPER_MUTED}`, background: '#fff', cursor: 'pointer', boxShadow: '0 4px 12px rgba(43,33,24,0.05)' },
   rowTitle: { fontSize: 14, fontWeight: 700, color: INK },
+  periodLabel: { display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', columnGap: 4, rowGap: 2 },
+  periodYears: { fontSize: 14, fontWeight: 800, color: INK },
+  periodDesc: { fontSize: 12.5, fontWeight: 400, color: '#8A7B68', fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: 0 },
   pill: { fontSize: 11, background: '#eef2ff', padding: '2px 10px', borderRadius: 999, fontWeight: 700, color: '#4f46e5' },
   
   bookCard: { 

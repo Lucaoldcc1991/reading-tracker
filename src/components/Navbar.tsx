@@ -1,5 +1,14 @@
 import { Link, useLocation } from 'react-router-dom'
 
+const TABS = [
+  { to: '/', label: 'Home', icon: '🏠' },
+  { to: '/library', label: 'Libri letti', icon: '📚' },
+  { to: '/explore', label: 'Esplora', icon: '🧭' },
+  { to: '/wishlist', label: 'Wishlist', icon: '✨' },
+  { to: '/stats', label: 'Stats', icon: '📊' },
+  { to: '/settings', label: '', icon: '⚙️' }
+]
+
 export default function Navbar() {
   const location = useLocation()
 
@@ -7,19 +16,15 @@ export default function Navbar() {
 
   return (
     <nav style={styles.nav}>
-      <NavItem to="/" label="Home" active={isActive('/')} />
-      <NavItem to="/library" label="Libreria" active={isActive('/library')} />
-      <NavItem to="/explore" label="Esplora" active={isActive('/explore')} />
-      <NavItem to="/wishlist" label="Wishlist" active={isActive('/wishlist')} />
-      <NavItem to="/stats" label="Stats" active={isActive('/stats')} />
-
-      {/* SETTINGS → ICONE */}
-      <NavItem
-        to="/settings"
-        label="⚙️"
-        active={isActive('/settings')}
-        isIcon
-      />
+      {TABS.map(tab => (
+        <NavItem
+          key={tab.to}
+          to={tab.to}
+          label={tab.label}
+          icon={tab.icon}
+          active={isActive(tab.to)}
+        />
+      ))}
     </nav>
   )
 }
@@ -27,68 +32,95 @@ export default function Navbar() {
 function NavItem({
   to,
   label,
-  active,
-  isIcon
+  icon,
+  active
 }: {
   to: string
   label: string
+  icon: string
   active: boolean
-  isIcon?: boolean
 }) {
   return (
-    <Link
-      to={to}
-      style={{
-        ...styles.link,
-        ...(active ? styles.active : {}),
-        ...(isIcon ? styles.iconLink : {})
-      }}
-    >
-      {label}
+    <Link to={to} style={styles.link}>
+      <span
+        style={{
+          ...styles.iconWrap,
+          ...(active ? styles.iconWrapActive : {})
+        }}
+      >
+        {icon}
+      </span>
+      <span style={{ ...styles.label, ...(active ? styles.labelActive : {}) }}>
+        {label}
+      </span>
     </Link>
   )
 }
 
 /* =========================
-   STILI
+   STILI — coerenti con la palette "scaffale"
 ========================= */
+
+const INK = '#2B2118'
+const PAPER_MUTED = '#F3EDE3'
+const TEAL = { from: '#1B4B43', to: '#0F332D', soft: '#E4EFEC' }
 
 const styles: Record<string, React.CSSProperties> = {
   nav: {
     display: 'flex',
     justifyContent: 'space-around',
     alignItems: 'center',
-    padding: '14px 10px',
-    borderBottom: '1px solid #eee',
-    background: '#ffffff',
-    position: 'sticky',
-    top: 0,
+    padding: '8px 4px calc(8px + env(safe-area-inset-bottom))',
+    background: 'rgba(255,255,255,0.92)',
+    backdropFilter: 'blur(14px)',
+    WebkitBackdropFilter: 'blur(14px)',
+    borderTop: `1px solid ${PAPER_MUTED}`,
+    borderRadius: '20px 20px 0 0',
+    boxShadow: '0 -8px 24px rgba(43,33,24,0.08)',
+    position: 'fixed',
+    left: 0,
+    right: 0,
+    bottom: 0,
     zIndex: 10
   },
 
   link: {
     textDecoration: 'none',
-    color: '#777',
-    fontSize: '14px',
-    fontWeight: 500,
-    padding: '6px 10px',
-    borderRadius: '8px',
-    transition: 'all 0.2s ease'
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '2px',
+    flex: 1,
+    padding: '2px 0'
   },
 
-  active: {
-    color: '#1e66ff',
-    background: '#eef4ff'
-  },
-
-  iconLink: {
-    fontSize: '18px',
-    padding: '6px 8px',
-    borderRadius: '10px',
+  iconWrap: {
+    fontSize: '17px',
+    width: '38px',
+    height: '30px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '34px',
-    height: '34px'
+    borderRadius: '12px',
+    transition: 'all 0.2s ease',
+    opacity: 0.55
+  },
+
+  iconWrapActive: {
+    background: `linear-gradient(145deg, ${TEAL.from}, ${TEAL.to})`,
+    boxShadow: '0 6px 14px rgba(27,75,67,0.3)',
+    opacity: 1
+  },
+
+  label: {
+    fontSize: '10px',
+    fontWeight: 600,
+    color: '#9C8F7D',
+    letterSpacing: '0.2px'
+  },
+
+  labelActive: {
+    color: INK,
+    fontWeight: 700
   }
 }

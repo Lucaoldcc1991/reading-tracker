@@ -83,7 +83,7 @@ export default function Wishlist() {
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.header}>La tua wishlist</h2>
+      <h2 style={styles.header}>✨ La tua wishlist</h2>
       <p style={styles.eyebrow}>
         {items.length === 0 ? 'Ancora nessun libro in lista' : `${items.length} ${items.length === 1 ? 'libro in lista' : 'libri in lista'}`}
       </p>
