@@ -879,7 +879,7 @@ function ContinentDonut({ counts }: { counts: Record<string, number> }) {
                 {e.name}
               </span>
               <span style={{ ...styles.donutLegendCount, color: active ? e.accent.from : NEUTRAL_TEXT }}>
-                {e.count}{active ? ` · ${pct}%` : ''}
+                {active ? `${pct}%` : '–'}
               </span>
             </div>
           )
@@ -955,7 +955,7 @@ function GenreDonut({ list }: { list: [string, Book[]][] }) {
               <span style={{ ...styles.donutLegendDot, background: e.accent.from }} />
               <span style={styles.donutLegendName}>{e.name}</span>
               <span style={{ ...styles.donutLegendCount, color: e.accent.from }}>
-                {e.count} · {pct}%
+                {pct}%
               </span>
             </div>
           )
@@ -1031,7 +1031,7 @@ function LengthDonut({ list }: { list: [string, Book[]][] }) {
               <span style={{ ...styles.donutLegendDot, background: e.accent.from }} />
               <span style={styles.donutLegendName}>{e.name}</span>
               <span style={{ ...styles.donutLegendCount, color: e.accent.from }}>
-                {e.count} · {pct}%
+                {pct}%
               </span>
             </div>
           )
