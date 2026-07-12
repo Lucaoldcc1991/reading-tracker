@@ -10,6 +10,7 @@ type Book = {
   genre: string
   series?: string
   country?: string
+  pages?: number
   readingMonth?: number
   readingYear?: number
   publicationYear?: number
@@ -23,7 +24,7 @@ const MONTHS = [
   'Settembre','Ottobre','Novembre','Dicembre'
 ]
 
-type View = 'home' | 'genres' | 'classics' | 'authorsAll' | 'periods' | 'series' | 'countries'
+type View = 'home' | 'genres' | 'classics' | 'authorsAll' | 'periods' | 'series' | 'countries' | 'lengths'
 
 type AuthorItem = {
   author: string
@@ -44,6 +45,26 @@ const PERIOD_ORDER = [
   'Sconosciuto'
 ]
 
+// Ordine fisso per le categorie di lunghezza, dal più corto al più lungo
+const LENGTH_ORDER = [
+  '📘 Brevi',
+  '📗 Medi',
+  '📙 Lunghi',
+  '📕 Mattoni',
+  '🧱 Colossi',
+  'Sconosciuto'
+]
+
+// Range di pagine mostrato in modo discreto accanto a ogni categoria
+const LENGTH_RANGES: Record<string, string> = {
+  '📘 Brevi': 'fino a 199 pagine',
+  '📗 Medi': '200–399 pagine',
+  '📙 Lunghi': '400–599 pagine',
+  '📕 Mattoni': '600–899 pagine',
+  '🧱 Colossi': '900+ pagine',
+  'Sconosciuto': ''
+}
+
 /* ================= PALETTE "SCAFFALE" =================
    Stessa identità visiva di Home e Libreria. */
 const INK = '#2B2118'
@@ -58,6 +79,7 @@ const GOLD: Accent     = { from: '#C08A28', to: '#8F661C', soft: '#F6EEDD' }
 const PLUM: Accent     = { from: '#4A3B6B', to: '#332748', soft: '#EBE7F1' }
 const SAGE: Accent     = { from: '#8FAE7D', to: '#66815A', soft: '#EAF1E5' }
 const SKY: Accent      = { from: '#2E9CE0', to: '#1D6FA8', soft: '#DDEFFB' }
+const CLAY: Accent     = { from: '#A15C38', to: '#703E25', soft: '#F1E1D5' }
 
 /* ================= COLORE PER GENERE =================
    Stessa mappa usata nella Libreria: ogni famiglia di generi
@@ -86,13 +108,93 @@ const genreColorFor = (genre?: string): Accent => {
   return found ? found.color : GENRE_FALLBACK
 }
 
+/* ================= MAPPA PAESE → CONTINENTE =================
+   ⚠️ ASSUNZIONE: non conosco la struttura esatta di COUNTRIES,
+   quindi ho costruito questa tabella con i nomi paese più comuni
+   in italiano. Se un tuo paese non compare qui, i suoi libri non
+   finiranno nel grafico (ma verranno segnalati come "non mappati"
+   sotto al grafico) — mandami la lista e la completo. */
+const CONTINENT_MAP: Record<string, string> = {
+  // Europa
+  'Italia': 'Europa', 'Francia': 'Europa', 'Germania': 'Europa', 'Spagna': 'Europa',
+  'Regno Unito': 'Europa', 'Portogallo': 'Europa', 'Irlanda': 'Europa',
+  'Paesi Bassi': 'Europa', 'Olanda': 'Europa', 'Belgio': 'Europa', 'Svizzera': 'Europa',
+  'Austria': 'Europa', 'Polonia': 'Europa', 'Repubblica Ceca': 'Europa', 'Ungheria': 'Europa',
+  'Romania': 'Europa', 'Bulgaria': 'Europa', 'Grecia': 'Europa', 'Svezia': 'Europa',
+  'Norvegia': 'Europa', 'Danimarca': 'Europa', 'Finlandia': 'Europa', 'Islanda': 'Europa',
+  'Russia': 'Europa', 'Ucraina': 'Europa', 'Croazia': 'Europa', 'Serbia': 'Europa',
+  'Slovenia': 'Europa', 'Slovacchia': 'Europa', 'Lituania': 'Europa', 'Lettonia': 'Europa',
+  'Estonia': 'Europa', 'Albania': 'Europa', 'Bosnia ed Erzegovina': 'Europa',
+  'Macedonia del Nord': 'Europa', 'Montenegro': 'Europa', 'Malta': 'Europa',
+  'Cipro': 'Europa', 'Lussemburgo': 'Europa', 'Monaco': 'Europa', 'Bielorussia': 'Europa',
+  'Moldavia': 'Europa',
+
+  // America
+  'Stati Uniti': 'America', 'Canada': 'America', 'Messico': 'America', 'Brasile': 'America',
+  'Argentina': 'America', 'Cile': 'America', 'Colombia': 'America', 'Perù': 'America',
+  'Venezuela': 'America', 'Ecuador': 'America', 'Bolivia': 'America', 'Paraguay': 'America',
+  'Uruguay': 'America', 'Cuba': 'America', 'Repubblica Dominicana': 'America', 'Haiti': 'America',
+  'Guatemala': 'America', 'Honduras': 'America', 'El Salvador': 'America', 'Nicaragua': 'America',
+  'Costa Rica': 'America', 'Panama': 'America', 'Giamaica': 'America', 'Porto Rico': 'America',
+
+  // Asia
+  'Cina': 'Asia', 'Giappone': 'Asia', 'Corea del Sud': 'Asia', 'Corea del Nord': 'Asia',
+  'India': 'Asia', 'Pakistan': 'Asia', 'Bangladesh': 'Asia', 'Vietnam': 'Asia',
+  'Thailandia': 'Asia', 'Indonesia': 'Asia', 'Filippine': 'Asia', 'Malesia': 'Asia',
+  'Singapore': 'Asia', 'Myanmar': 'Asia', 'Cambogia': 'Asia', 'Laos': 'Asia',
+  'Mongolia': 'Asia', 'Kazakistan': 'Asia', 'Uzbekistan': 'Asia', 'Nepal': 'Asia',
+  'Sri Lanka': 'Asia', 'Iran': 'Asia', 'Iraq': 'Asia', 'Israele': 'Asia',
+  'Arabia Saudita': 'Asia', 'Emirati Arabi Uniti': 'Asia', 'Turchia': 'Asia',
+  'Giordania': 'Asia', 'Libano': 'Asia', 'Siria': 'Asia', 'Yemen': 'Asia',
+  'Afghanistan': 'Asia', 'Taiwan': 'Asia', 'Hong Kong': 'Asia',
+
+  // Africa
+  'Egitto': 'Africa', 'Sudafrica': 'Africa', 'Nigeria': 'Africa', 'Kenya': 'Africa',
+  'Marocco': 'Africa', 'Algeria': 'Africa', 'Tunisia': 'Africa', 'Libia': 'Africa',
+  'Etiopia': 'Africa', 'Ghana': 'Africa', 'Senegal': 'Africa', "Costa d'Avorio": 'Africa',
+  'Camerun': 'Africa', 'Tanzania': 'Africa', 'Uganda': 'Africa', 'Zimbabwe': 'Africa',
+  'Mozambico': 'Africa', 'Angola': 'Africa', 'Congo': 'Africa',
+  'Repubblica Democratica del Congo': 'Africa', 'Zambia': 'Africa', 'Namibia': 'Africa',
+  'Botswana': 'Africa', 'Ruanda': 'Africa', 'Somalia': 'Africa', 'Mali': 'Africa',
+  'Niger': 'Africa', 'Ciad': 'Africa', 'Sudan': 'Africa',
+
+  // Oceania
+  'Australia': 'Oceania', 'Nuova Zelanda': 'Oceania', 'Papua Nuova Guinea': 'Oceania',
+  'Figi': 'Oceania', 'Samoa': 'Oceania', 'Tonga': 'Oceania'
+}
+
+// Colore fisso per categoria di lunghezza, dal più "leggero" (Brevi)
+// al più "pesante" (Colossi) — stessa logica cromatica del resto dell'app.
+const LENGTH_COLORS: Record<string, Accent> = {
+  '📘 Brevi': SKY,
+  '📗 Medi': SAGE,
+  '📙 Lunghi': GOLD,
+  '📕 Mattoni': CLAY,
+  '🧱 Colossi': BURGUNDY,
+  'Sconosciuto': { from: '#8A7B68', to: '#5C4E3D', soft: PAPER_MUTED }
+}
+
+const lengthColorFor = (category: string): Accent =>
+  LENGTH_COLORS[category] || LENGTH_COLORS['Sconosciuto']
+
+const CONTINENT_ORDER = ['Europa', 'Asia', 'Africa', 'America', 'Oceania']
+
+const CONTINENT_ACCENTS: Record<string, Accent> = {
+  Europa: SKY,
+  Asia: GOLD,
+  Africa: CLAY,
+  America: SAGE,
+  Oceania: PLUM
+}
+
 const HOME_CARDS: { view: View; icon: string; title: string; desc: string; accent: Accent }[] = [
   { view: 'authorsAll', icon: '👤', title: 'Autori', desc: 'Esplora gli autori', accent: TEAL },
   { view: 'genres', icon: '📚', title: 'Generi', desc: 'Esplora i libri per categoria', accent: BURGUNDY },
   { view: 'classics', icon: '🏛️', title: 'Classici', desc: 'Autori e opere classiche', accent: GOLD },
   { view: 'periods', icon: '⏳', title: 'Periodi storici', desc: 'Esplora per epoca', accent: PLUM },
   { view: 'series', icon: '📖', title: 'Serie', desc: 'Esplora i libri per saga', accent: SAGE },
-  { view: 'countries', icon: '🌍', title: 'Paesi', desc: 'Esplora i libri per provenienza', accent: SKY }
+  { view: 'countries', icon: '🌍', title: 'Paesi', desc: 'Esplora i libri per provenienza', accent: SKY },
+  { view: 'lengths', icon: '📏', title: 'Lunghezza', desc: 'Esplora i libri per numero di pagine', accent: CLAY }
 ]
 
 export default function Explore() {
@@ -107,6 +209,7 @@ export default function Explore() {
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null)
   const [selectedSeries, setSelectedSeries] = useState<string | null>(null)
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null)
+  const [selectedLength, setSelectedLength] = useState<string | null>(null)
 
   useEffect(() => {
     load()
@@ -172,6 +275,22 @@ export default function Explore() {
     )
   }, [books, selectedCountry])
 
+  /* 🥧 CONTEGGIO PER CONTINENTE */
+  const continentCounts = useMemo(() => {
+    const map: Record<string, number> = {}
+    books.forEach(b => {
+      if (!b.country) return
+      const continent = CONTINENT_MAP[b.country]
+      if (!continent) return
+      map[continent] = (map[continent] || 0) + 1
+    })
+    return map
+  }, [books])
+
+  const unmappedCount = useMemo(() => {
+    return books.filter(b => b.country && !CONTINENT_MAP[b.country]).length
+  }, [books])
+
   /* ⏳ PERIODI STORICI AGGIORNATI */
   const getPeriod = (year?: number) => {
     if (!year) return 'Sconosciuto'
@@ -207,6 +326,37 @@ export default function Explore() {
       b => getPeriod(b.publicationYear ?? b.readingYear) === selectedPeriod
     )
   }, [books, selectedPeriod])
+
+  /* 📏 RAGGRUPPAMENTO PER LUNGHEZZA */
+  const getLengthCategory = (pages?: number) => {
+    if (!pages) return 'Sconosciuto'
+    if (pages <= 199) return '📘 Brevi'
+    if (pages <= 399) return '📗 Medi'
+    if (pages <= 599) return '📙 Lunghi'
+    if (pages <= 899) return '📕 Mattoni'
+    return '🧱 Colossi'
+  }
+
+  const lengthsList = useMemo(() => {
+    const map: Record<string, Book[]> = {}
+
+    books.forEach(b => {
+      const category = getLengthCategory(b.pages)
+      if (!map[category]) map[category] = []
+      map[category].push(b)
+    })
+
+    return Object.entries(map).sort(([a], [b]) => {
+      const indexA = LENGTH_ORDER.indexOf(a)
+      const indexB = LENGTH_ORDER.indexOf(b)
+      return (indexA === -1 ? 99 : indexA) - (indexB === -1 ? 99 : indexB)
+    })
+  }, [books])
+
+  const booksByLength = useMemo(() => {
+    if (!selectedLength) return []
+    return books.filter(b => getLengthCategory(b.pages) === selectedLength)
+  }, [books, selectedLength])
 
   const totalBooks = books.length
 
@@ -295,13 +445,20 @@ export default function Explore() {
       } else {
         setView('home')
       }
+    } else if (view === 'lengths') {
+      if (selectedLength) {
+        setSelectedLength(null)
+      } else {
+        setView('home')
+      }
     } else {
       setView('home')
     }
   }
 
-  // Renderizzatore universale e pulito per TUTTE le schede (Generi, Classici, Periodi, Autori, Serie, Paesi)
-  // Ogni libro prende il colore del proprio genere, come in Libreria.
+  // Renderizzatore universale e pulito per TUTTE le schede (Generi, Classici, Periodi, Autori, Serie, Paesi, Lunghezza)
+  // Ogni libro prende il colore del proprio genere tramite un pallino discreto in alto a destra,
+  // coerente con lo stile di Libreria (niente più bordi spessi colorati).
   // Ordine sempre cronologico di lettura: il primo letto in cima, il più recente in fondo.
   const renderCleanBookList = (list: Book[]) => {
     const sortedList = [...list].sort((a, b) => {
@@ -319,7 +476,16 @@ export default function Explore() {
           const accent = genreColorFor(b.genre)
 
           return (
-            <div key={b.id} style={{ ...styles.bookCard, borderLeft: `4px solid ${accent.from}` }}>
+            <div key={b.id} style={styles.bookCard}>
+              <span
+                style={{
+                  ...styles.genreDot,
+                  background: accent.from,
+                  boxShadow: `0 0 0 3px ${accent.soft}`
+                }}
+                title={b.genre}
+              />
+
               {b.cover ? (
                 <img src={b.cover} alt={b.title} style={styles.cover} />
               ) : (
@@ -331,6 +497,11 @@ export default function Explore() {
                 <div style={{ fontSize: 12, color: '#6b6152', marginTop: 2 }}>
                   {b.author}
                 </div>
+                {!!b.pages && (
+                  <div style={styles.pagesMeta}>
+                    {b.pages} pagine
+                  </div>
+                )}
                 {month && b.readingYear && (
                   <div style={styles.readingMeta}>
                     📅 {month} {b.readingYear}
@@ -376,16 +547,32 @@ export default function Explore() {
       {/* 📚 SEZIONE GENERI */}
       {view === 'genres' && !selectedGenre && (
         <div style={styles.stack}>
+          {genresList.length > 0 && (
+            <div style={styles.mapCard}>
+              <h3 style={styles.mapTitle}>📊 Libri per genere</h3>
+              <GenreDonut list={genresList} />
+            </div>
+          )}
+
           {genresList.map(([genre, list]) => {
             const accent = genreColorFor(genre)
             return (
               <div
                 key={genre}
-                style={{ ...styles.rowCard, borderLeft: `4px solid ${accent.from}` }}
+                style={styles.rowCard}
                 onClick={() => setSelectedGenre(genre)}
               >
-                <span style={styles.rowTitle}>{genre}</span>
-                <span style={{ ...styles.pill, background: accent.soft, color: accent.from }}>{list.length}</span>
+                <span style={styles.rowTitleWithDot}>
+                  <span
+                    style={{
+                      ...styles.genreDotInline,
+                      background: accent.from,
+                      boxShadow: `0 0 0 3px ${accent.soft}`
+                    }}
+                  />
+                  {genre}
+                </span>
+                <span style={styles.pill}>{list.length}</span>
               </div>
             )
           })}
@@ -458,6 +645,16 @@ export default function Explore() {
       {/* 🌍 SEZIONE PAESI */}
       {view === 'countries' && !selectedCountry && (
         <div style={styles.stack}>
+          <div style={styles.mapCard}>
+            <h3 style={styles.mapTitle}>📊 Libri per continente</h3>
+            <ContinentDonut counts={continentCounts} />
+            {unmappedCount > 0 && (
+              <p style={styles.mapNote}>
+                +{unmappedCount} libr{unmappedCount === 1 ? 'o' : 'i'} da paesi non ancora mappati
+              </p>
+            )}
+          </div>
+
           {countriesList.map(([country, list]) => {
             const flag = COUNTRIES.find(c => c.name === country)?.flag
             return (
@@ -476,6 +673,38 @@ export default function Explore() {
 
       {view === 'countries' && selectedCountry &&
         renderCleanBookList(booksByCountry)
+      }
+
+      {/* 📏 SEZIONE LUNGHEZZA */}
+      {view === 'lengths' && !selectedLength && (
+        <div style={styles.stack}>
+          {lengthsList.length > 0 && (
+            <div style={styles.mapCard}>
+              <h3 style={styles.mapTitle}>📊 Libri per lunghezza</h3>
+              <LengthDonut list={lengthsList} />
+            </div>
+          )}
+
+          {lengthsList.map(([category, list]) => (
+            <div
+              key={category}
+              style={styles.rowCard}
+              onClick={() => setSelectedLength(category)}
+            >
+              <span style={styles.periodLabel}>
+                <span style={styles.periodYears}>{category}</span>
+                {LENGTH_RANGES[category] && (
+                  <span style={styles.periodDesc}> · {LENGTH_RANGES[category]}</span>
+                )}
+              </span>
+              <span style={styles.pill}>{list.length}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {view === 'lengths' && selectedLength &&
+        renderCleanBookList(booksByLength)
       }
 
       {/* 👤 SEZIONE AUTORI */}
@@ -569,6 +798,249 @@ export default function Explore() {
   )
 }
 
+/* ================= GRAFICO A CIAMBELLA PER CONTINENTE =================
+   Sostituisce la vecchia cartina geografica: stessa funzione (mostrare
+   la distribuzione dei libri tra i continenti) ma resa con un grafico
+   a ciambella + legenda. Visivamente è volutamente molto diverso
+   dall'elenco dei paesi qui sotto (righe bianche con bandierina):
+   qui c'è un cerchio colorato con il totale al centro e una legenda
+   compatta senza card, per non confondere le due sezioni. */
+function ContinentDonut({ counts }: { counts: Record<string, number> }) {
+  const NEUTRAL_STROKE = '#DCD5C4'
+  const NEUTRAL_TEXT = '#B7AC9A'
+
+  const entries = CONTINENT_ORDER.map(name => ({
+    name,
+    count: counts[name] || 0,
+    accent: CONTINENT_ACCENTS[name]
+  }))
+
+  const total = entries.reduce((sum, e) => sum + e.count, 0)
+
+  const r = 62
+  const strokeWidth = 22
+  const circumference = 2 * Math.PI * r
+
+  let cumulative = 0
+
+  return (
+    <div style={styles.donutWrap}>
+      <svg viewBox="0 0 180 180" style={styles.donutSvg}>
+        {/* Anello di base, sempre visibile */}
+        <circle
+          cx={90} cy={90} r={r}
+          fill="none"
+          stroke={NEUTRAL_STROKE}
+          strokeWidth={strokeWidth}
+        />
+
+        {/* Uno spicchio per ogni continente con almeno un libro */}
+        {total > 0 && entries.filter(e => e.count > 0).map(e => {
+          const arcLength = (e.count / total) * circumference
+          const offset = -(cumulative / total) * circumference
+          cumulative += e.count
+
+          return (
+            <circle
+              key={e.name}
+              cx={90} cy={90} r={r}
+              fill="none"
+              stroke={e.accent.from}
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${arcLength} ${circumference - arcLength}`}
+              strokeDashoffset={offset}
+              transform="rotate(-90 90 90)"
+            />
+          )
+        })}
+
+        <text x={90} y={84} textAnchor="middle" style={{ fontSize: 28, fontWeight: 800, fill: INK }}>
+          {total}
+        </text>
+        <text x={90} y={104} textAnchor="middle" style={{ fontSize: 9.5, fontWeight: 700, fill: '#8A7B68', letterSpacing: 0.5 }}>
+          LIBRI MAPPATI
+        </text>
+      </svg>
+
+      <div style={styles.donutLegend}>
+        {entries.map(e => {
+          const pct = total > 0 ? Math.round((e.count / total) * 100) : 0
+          const active = e.count > 0
+
+          return (
+            <div key={e.name} style={styles.donutLegendRow}>
+              <span
+                style={{
+                  ...styles.donutLegendDot,
+                  background: active ? e.accent.from : NEUTRAL_STROKE
+                }}
+              />
+              <span style={{ ...styles.donutLegendName, color: active ? INK : NEUTRAL_TEXT }}>
+                {e.name}
+              </span>
+              <span style={{ ...styles.donutLegendCount, color: active ? e.accent.from : NEUTRAL_TEXT }}>
+                {e.count}{active ? ` · ${pct}%` : ''}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+/* ================= GRAFICO A CIAMBELLA PER GENERE =================
+   Stessa logica del grafico continenti, applicata ai generi.
+   Colori identici a quelli usati nella lista sotto e in Libreria,
+   così il grafico è leggibile a colpo d'occhio come "riepilogo"
+   di ciò che si vede nelle righe elencate più in basso. */
+function GenreDonut({ list }: { list: [string, Book[]][] }) {
+  const entries = list.map(([genre, books]) => ({
+    name: genre,
+    count: books.length,
+    accent: genreColorFor(genre)
+  }))
+
+  const total = entries.reduce((sum, e) => sum + e.count, 0)
+
+  const r = 62
+  const strokeWidth = 22
+  const circumference = 2 * Math.PI * r
+
+  let cumulative = 0
+
+  return (
+    <div style={styles.donutWrap}>
+      <svg viewBox="0 0 180 180" style={styles.donutSvg}>
+        <circle
+          cx={90} cy={90} r={r}
+          fill="none"
+          stroke="#DCD5C4"
+          strokeWidth={strokeWidth}
+        />
+
+        {total > 0 && entries.map(e => {
+          const arcLength = (e.count / total) * circumference
+          const offset = -(cumulative / total) * circumference
+          cumulative += e.count
+
+          return (
+            <circle
+              key={e.name}
+              cx={90} cy={90} r={r}
+              fill="none"
+              stroke={e.accent.from}
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${arcLength} ${circumference - arcLength}`}
+              strokeDashoffset={offset}
+              transform="rotate(-90 90 90)"
+            />
+          )
+        })}
+
+        <text x={90} y={84} textAnchor="middle" style={{ fontSize: 28, fontWeight: 800, fill: INK }}>
+          {total}
+        </text>
+        <text x={90} y={104} textAnchor="middle" style={{ fontSize: 9.5, fontWeight: 700, fill: '#8A7B68', letterSpacing: 0.5 }}>
+          LIBRI CLASSIFICATI
+        </text>
+      </svg>
+
+      <div style={styles.donutLegend}>
+        {entries.map(e => {
+          const pct = total > 0 ? Math.round((e.count / total) * 100) : 0
+
+          return (
+            <div key={e.name} style={styles.donutLegendRow}>
+              <span style={{ ...styles.donutLegendDot, background: e.accent.from }} />
+              <span style={styles.donutLegendName}>{e.name}</span>
+              <span style={{ ...styles.donutLegendCount, color: e.accent.from }}>
+                {e.count} · {pct}%
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+/* ================= GRAFICO A CIAMBELLA PER LUNGHEZZA =================
+   Stessa logica dei due grafici precedenti, applicata alle categorie
+   di lunghezza. L'ordine segue sempre LENGTH_ORDER (dal più corto al
+   più lungo) invece che il conteggio, per restare leggibile come
+   progressione — coerente con l'elenco sottostante. */
+function LengthDonut({ list }: { list: [string, Book[]][] }) {
+  const entries = list.map(([category, books]) => ({
+    name: category,
+    count: books.length,
+    accent: lengthColorFor(category)
+  }))
+
+  const total = entries.reduce((sum, e) => sum + e.count, 0)
+
+  const r = 62
+  const strokeWidth = 22
+  const circumference = 2 * Math.PI * r
+
+  let cumulative = 0
+
+  return (
+    <div style={styles.donutWrap}>
+      <svg viewBox="0 0 180 180" style={styles.donutSvg}>
+        <circle
+          cx={90} cy={90} r={r}
+          fill="none"
+          stroke="#DCD5C4"
+          strokeWidth={strokeWidth}
+        />
+
+        {total > 0 && entries.map(e => {
+          const arcLength = (e.count / total) * circumference
+          const offset = -(cumulative / total) * circumference
+          cumulative += e.count
+
+          return (
+            <circle
+              key={e.name}
+              cx={90} cy={90} r={r}
+              fill="none"
+              stroke={e.accent.from}
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${arcLength} ${circumference - arcLength}`}
+              strokeDashoffset={offset}
+              transform="rotate(-90 90 90)"
+            />
+          )
+        })}
+
+        <text x={90} y={84} textAnchor="middle" style={{ fontSize: 28, fontWeight: 800, fill: INK }}>
+          {total}
+        </text>
+        <text x={90} y={104} textAnchor="middle" style={{ fontSize: 9.5, fontWeight: 700, fill: '#8A7B68', letterSpacing: 0.5 }}>
+          LIBRI CLASSIFICATI
+        </text>
+      </svg>
+
+      <div style={styles.donutLegend}>
+        {entries.map(e => {
+          const pct = total > 0 ? Math.round((e.count / total) * 100) : 0
+
+          return (
+            <div key={e.name} style={styles.donutLegendRow}>
+              <span style={{ ...styles.donutLegendDot, background: e.accent.from }} />
+              <span style={styles.donutLegendName}>{e.name}</span>
+              <span style={{ ...styles.donutLegendCount, color: e.accent.from }}>
+                {e.count} · {pct}%
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 /* ================= STILI AGGIORNATI ================= */
 const styles: Record<string, React.CSSProperties> = {
   container: { display: 'flex', flexDirection: 'column', gap: 12, background: PAPER, padding: '4px 2px 20px' },
@@ -591,10 +1063,64 @@ const styles: Record<string, React.CSSProperties> = {
   stack: { display: 'flex', flexDirection: 'column', gap: 10 },
   rowCard: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 14, borderRadius: 14, border: `1px solid ${PAPER_MUTED}`, background: '#fff', cursor: 'pointer', boxShadow: '0 4px 12px rgba(43,33,24,0.05)' },
   rowTitle: { fontSize: 14, fontWeight: 700, color: INK },
+  rowTitleWithDot: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 700, color: INK },
+  genreDotInline: { width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0 },
   periodLabel: { display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', columnGap: 4, rowGap: 2 },
   periodYears: { fontSize: 14, fontWeight: 800, color: INK },
   periodDesc: { fontSize: 12.5, fontWeight: 400, color: '#8A7B68', fontFamily: 'system-ui, -apple-system, sans-serif', letterSpacing: 0 },
   pill: { fontSize: 11, background: '#eef2ff', padding: '2px 10px', borderRadius: 999, fontWeight: 700, color: '#4f46e5' },
+
+  mapCard: {
+    padding: '16px',
+    borderRadius: '18px',
+    background: '#fff',
+    border: `1px solid ${PAPER_MUTED}`,
+    boxShadow: '0 4px 12px rgba(43,33,24,0.05)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px'
+  },
+  mapTitle: { fontSize: 14, fontWeight: 700, color: INK, margin: 0, textAlign: 'center' },
+  mapNote: { fontSize: 11, color: '#8A7B68', fontStyle: 'italic', margin: 0, textAlign: 'center' },
+
+  donutWrap: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '14px'
+  },
+  donutSvg: {
+    width: '150px',
+    height: '150px',
+    display: 'block'
+  },
+  donutLegend: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '7px',
+    width: '100%',
+    maxWidth: '260px'
+  },
+  donutLegendRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '13px'
+  },
+  donutLegendDot: {
+    width: '10px',
+    height: '10px',
+    borderRadius: '50%',
+    flexShrink: 0
+  },
+  donutLegendName: {
+    fontWeight: 700,
+    flex: 1
+  },
+  donutLegendCount: {
+    fontWeight: 700,
+    fontSize: '12px'
+  },
   
   bookCard: { 
     display: 'flex', 
@@ -605,7 +1131,18 @@ const styles: Record<string, React.CSSProperties> = {
     border: `1px solid ${PAPER_MUTED}`, 
     background: '#fff', 
     marginBottom: 8,
-    boxShadow: '0 4px 12px rgba(43,33,24,0.05)'
+    boxShadow: '0 4px 12px rgba(43,33,24,0.05)',
+    position: 'relative'
+  },
+
+  genreDot: {
+    position: 'absolute',
+    top: '12px',
+    right: '14px',
+    width: '8px',
+    height: '8px',
+    borderRadius: '50%',
+    flexShrink: 0
   },
   
   cover: {
@@ -634,7 +1171,8 @@ const styles: Record<string, React.CSSProperties> = {
     flex: 1
   },
   
-  bookTitle: { fontSize: 14, fontWeight: 700, color: INK, fontFamily: 'Georgia, "Iowan Old Style", serif' },
+  bookTitle: { fontSize: 14, fontWeight: 700, color: INK, fontFamily: 'Georgia, "Iowan Old Style", serif', paddingRight: 16 },
+  pagesMeta: { fontSize: 11, color: '#8A7B68', margin: 0 },
   readingMeta: { fontSize: 11, color: '#8A7B68', marginTop: 4 },
   metaLine: { fontSize: 12, color: '#8A7B68', marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.6px' },
   letterHeader: { fontSize: 14, fontWeight: 800, color: TEAL.from, marginTop: 12, marginBottom: 6 },

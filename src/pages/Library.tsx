@@ -339,7 +339,6 @@ export default function Library() {
 
                 style={{
                   ...styles.card,
-                  borderLeft: `4px solid ${spine.from}`,
                   transform:
                     `translateX(${getOffset(book.id)}px)`
                 }}
@@ -362,6 +361,15 @@ export default function Library() {
 
               >
 
+                {/* Badge discreto: pallino del colore del genere in angolo */}
+                <span
+                  style={{
+                    ...styles.genreDot,
+                    background: spine.from,
+                    boxShadow: `0 0 0 3px ${spine.soft}`
+                  }}
+                  title={book.genre}
+                />
 
                 {book.cover ? (
 
@@ -547,7 +555,18 @@ const styles: Record<string, React.CSSProperties> = {
     border: `1px solid ${PAPER_MUTED}`,
     boxShadow: '0 4px 12px rgba(43,33,24,0.05)',
     transition: 'transform 0.2s ease',
-    touchAction: 'pan-y'
+    touchAction: 'pan-y',
+    position: 'relative'
+  },
+
+  genreDot: {
+    position: 'absolute',
+    top: '12px',
+    right: '14px',
+    width: '8px',
+    height: '8px',
+    borderRadius: '50%',
+    flexShrink: 0
   },
 
 
@@ -588,7 +607,8 @@ const styles: Record<string, React.CSSProperties> = {
     color: INK,
     fontFamily: 'Georgia, "Iowan Old Style", serif',
     fontSize: '15px',
-    margin: 0
+    margin: 0,
+    paddingRight: '18px'
   },
 
 
