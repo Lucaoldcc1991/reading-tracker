@@ -100,12 +100,30 @@ const genreColorFor = (genre?: string): GenreColor => {
   return found ? found.color : GENRE_FALLBACK
 }
 
+/* Legenda leggibile: un'etichetta per famiglia di generi,
+   con lo stesso colore usato nel pallino sulle card dei libri. */
+const GENRE_LEGEND: { label: string; color: GenreColor }[] = [
+  { label: 'Giallo/Noir/Legal', color: GENRE_COLOR_MAP[0].color },
+  { label: 'Thriller', color: GENRE_COLOR_MAP[1].color },
+  { label: 'Horror/Gotico/Paranormale', color: GENRE_COLOR_MAP[2].color },
+  { label: 'Realista/Psicologico/Filosofico', color: GENRE_COLOR_MAP[3].color },
+  { label: 'Narrativa per ragazzi', color: GENRE_COLOR_MAP[4].color },
+  { label: 'Saggio', color: GENRE_COLOR_MAP[5].color },
+  { label: 'Fumetto', color: GENRE_COLOR_MAP[6].color },
+  { label: 'Storico/Formazione/Autobiografico', color: GENRE_COLOR_MAP[7].color },
+  { label: 'Fantascienza', color: GENRE_COLOR_MAP[8].color },
+  { label: 'Fantasy', color: GENRE_COLOR_MAP[9].color },
+  { label: 'Avventura', color: GENRE_COLOR_MAP[10].color },
+  { label: 'Distopico', color: GENRE_COLOR_MAP[11].color }
+]
+
 export default function Library() {
   const [books, setBooks] = useState<Book[]>([])
   const [search, setSearch] = useState('')
   const [editingBook, setEditingBook] = useState<Book | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [yearFilter, setYearFilter] = useState<number | 'all'>('all')
+  const [showLegend, setShowLegend] = useState(false)
 
   const [openSwipeId, setOpenSwipeId] = useState<number | null>(null)
 
@@ -278,6 +296,28 @@ export default function Library() {
         + Aggiungi libro
       </button>
 
+      {/* Legenda colori dei generi: richiudibile per non occupare spazio inutile */}
+      <button
+        onClick={() => setShowLegend(v => !v)}
+        style={styles.legendToggle}
+      >
+        <span>🎨 Legenda generi</span>
+        <span style={{ transform: showLegend ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }}>
+          ▾
+        </span>
+      </button>
+
+      {showLegend && (
+        <div style={styles.legendCard}>
+          {GENRE_LEGEND.map(g => (
+            <span key={g.label} style={styles.legendItem}>
+              <span style={{ ...styles.legendDot, background: g.color.from }} />
+              {g.label}
+            </span>
+          ))}
+        </div>
+      )}
+
 
       {showForm && (
         <div style={styles.modalOverlay}>
@@ -361,7 +401,9 @@ export default function Library() {
 
               >
 
-                {/* Badge discreto: pallino del colore del genere in angolo */}
+                {/* Badge discreto: pallino del colore del genere in angolo.
+                    Il genere non è più scritto per esteso: basta il colore,
+                    spiegato nella legenda in cima alla schermata. */}
                 <span
                   style={{
                     ...styles.genreDot,
@@ -403,7 +445,7 @@ export default function Library() {
 
 
                   <p style={styles.meta}>
-                    {book.author} · <span style={{ color: spine.from, fontWeight: 700 }}>{book.genre}</span>
+                    {book.author}
                   </p>
 
 
@@ -517,6 +559,47 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '14px',
     cursor: 'pointer',
     boxShadow: '0 8px 18px rgba(27,75,67,0.25)'
+  },
+
+  legendToggle: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '10px 14px',
+    borderRadius: '12px',
+    border: `1px solid ${PAPER_MUTED}`,
+    background: '#fff',
+    color: INK,
+    fontSize: '13px',
+    fontWeight: 700,
+    cursor: 'pointer'
+  },
+
+  legendCard: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px 14px',
+    padding: '14px',
+    borderRadius: '14px',
+    background: '#fff',
+    border: `1px solid ${PAPER_MUTED}`,
+    boxShadow: '0 4px 12px rgba(43,33,24,0.05)'
+  },
+
+  legendItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '12px',
+    fontWeight: 600,
+    color: '#6b6152'
+  },
+
+  legendDot: {
+    width: '9px',
+    height: '9px',
+    borderRadius: '50%',
+    flexShrink: 0
   },
 
 
